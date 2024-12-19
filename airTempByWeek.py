@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
-from helper_functions import getDataTypeFromDate, getDataFromStorage, createOutputDict, averageValuesInDict
+from helper_functions import getDataTypeFromDate, getDataFromStorage, createOutputDict, getAverageValuesForEveryStation
 import json
 
 def fetch_weekly_temperature(start_date, storage_json_path):
@@ -25,7 +25,7 @@ def fetch_weekly_temperature(start_date, storage_json_path):
             average_temperature = storage_data[date]
         else:
             temperature_data = getDataTypeFromDate('air-temperature', date)
-            output_dict = averageValuesInDict(temperature_data, createOutputDict("temperature_stations.json", temperature_data))
+            output_dict = getAverageValuesForEveryStation(temperature_data, createOutputDict("temperature_stations.json", temperature_data))
 
             # Calculate average temperature for the day
             total_temperature = sum([data[1] for data in output_dict.values()])

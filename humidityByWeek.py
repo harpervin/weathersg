@@ -1,6 +1,6 @@
 import matplotlib.pyplot as plt
 from datetime import datetime, timedelta
-from helper_functions import getDataTypeFromDate, getDataFromStorage, createOutputDict, averageValuesInDict
+from helper_functions import getDataTypeFromDate, getDataFromStorage, createOutputDict, getAverageValuesForEveryStation
 import json
 
 def fetch_weekly_humidity(start_date, storage_json_path):
@@ -24,7 +24,7 @@ def fetch_weekly_humidity(start_date, storage_json_path):
             average_humidity = storage_data[date]
         else:
             humidity_data = getDataTypeFromDate('relative-humidity', date)
-            output_dict = averageValuesInDict(humidity_data, createOutputDict("humidity_stations.json", humidity_data))
+            output_dict = getAverageValuesForEveryStation(humidity_data, createOutputDict("humidity_stations.json", humidity_data))
 
             # Calculate average humidity for the day
             total_humidity = sum([data[1] for data in output_dict.values()])

@@ -1,6 +1,6 @@
 import requests
 import matplotlib.pyplot as plt
-from helper_functions import getDataTypeFromDate, import_dictionaries, averageValuesInDict, createOutputDict, cleanupStationNames
+from helper_functions import getDataTypeFromDate, import_dictionaries, getAverageValuesForEveryStation, createOutputDict, cleanupStationNames
 import json
 
 '''
@@ -69,7 +69,7 @@ if __name__ == '__main__':
         exit()
     if not humidity_data["complete_data"]:
         print(f"Only partial data found on these dates - {humidity_data['partial_data_dates']}")   
-    output_dict = averageValuesInDict(
+    output_dict = getAverageValuesForEveryStation(
         humidity_data, createOutputDict("humidity_stations.json", humidity_data))
     locations, humidity_values = cleanupStationNames(humidity_data['stations'], output_dict)
 

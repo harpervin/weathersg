@@ -1,7 +1,7 @@
 import json
 import os
 import matplotlib.pyplot as plt
-from helper_functions import getDataTypeFromDate, createOutputDict, averageValuesInDict
+from helper_functions import getDataTypeFromDate, createOutputDict, getAverageValuesForEveryStation
 from calendar import monthrange
 
 
@@ -44,7 +44,7 @@ def store_daily_humidity(year, month, output_file):
                 print(f"No data available for {date}.")
                 continue
 
-            output_dict = averageValuesInDict(humidity_data, createOutputDict(
+            output_dict = getAverageValuesForEveryStation(humidity_data, createOutputDict(
                 "humidity_stations.json", humidity_data))
 
             # Aggregate average humidity for the day

@@ -1,5 +1,5 @@
 import matplotlib.pyplot as plt
-from helper_functions import getDataTypeFromDate, createOutputDict, averageValuesInDict, import_dictionaries
+from helper_functions import getDataTypeFromDate, createOutputDict, getAverageValuesForEveryStation, import_dictionaries
 
 def calculateAverageHumidityByRegion(date, district_map):
     """
@@ -17,7 +17,7 @@ def calculateAverageHumidityByRegion(date, district_map):
         print(f"No data available for {date}.")
         return {}
 
-    output_dict = averageValuesInDict(humidity_data, createOutputDict("humidity_stations.json", humidity_data))
+    output_dict = getAverageValuesForEveryStation(humidity_data, createOutputDict("humidity_stations.json", humidity_data))
     locations = [data[0] for data in output_dict.values()]
     humidity_values = [data[1] for data in output_dict.values()]
 

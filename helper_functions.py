@@ -1,8 +1,9 @@
 import json
 import requests
-from datetime import datetime
+from datetime import datetime, timedelta
 from collections import defaultdict
 import os
+import matplotlib.pyplot as plt
 from calendar import monthrange
 
 
@@ -86,7 +87,7 @@ def getDataTypeFromDate(data_type, date):
         response = requests.get(url, params=params)
         data = response.json()
 
-        if data["data"] is None:
+        if data.get("data") is None:
             return None
         # Check if 1st page does not contain a pagination token - means missing data
         if not pagination_token and not data["data"].get("paginationToken"):
@@ -96,6 +97,7 @@ def getDataTypeFromDate(data_type, date):
         # Collect readings from the current response
         all_stations.extend(data["data"]["stations"])
         all_readings.extend(data["data"]["readings"])
+        readingUnit = data["data"]["readingUnit"]
 
         # Check if there's a next page
         pagination_token = data["data"].get("paginationToken")
@@ -106,7 +108,8 @@ def getDataTypeFromDate(data_type, date):
         "stations": all_stations,
         "readings": all_readings,
         "complete_data": complete_data,
-        "partial_data_dates": partial_data_dates
+        "partial_data_dates": partial_data_dates,
+        "readingUnit": readingUnit
     }
 
 
@@ -183,7 +186,8 @@ def getTotalDataHourly(data_type, date):
     # Return the structured data with hourly aggregation
     return {
         "stations": data["data"]["stations"],
-        "readings": formatted_readings
+        "readings": formatted_readings,
+        "readingUnit": data["data"]["readingUnit"]
     }
 
 # Fetches Average weather data for a specific date - at 1 hour intervals
@@ -252,7 +256,8 @@ def getAverageDataHourly(data_type, date):
     # Return the structured data with hourly averages
     return {
         "stations": data["data"]["stations"],
-        "readings": formatted_readings
+        "readings": formatted_readings,
+        "readingUnit": data["data"]["readingUnit"]
     }
 
 
@@ -348,7 +353,7 @@ def sumValuesForEveryEntry(weather_data: dict, output_dict: dict):
     return output_dict
 
 
-def averageValuesInDict(weather_data: dict, output_dict: dict):
+def getAverageValuesForEveryStation(weather_data: dict, output_dict: dict):
     readings = weather_data['readings']
     station_counts = {station_id: 0 for station_id in output_dict.keys()}
 
@@ -371,8 +376,22 @@ def averageValuesInDict(weather_data: dict, output_dict: dict):
     return output_dict
 
 
-def averageValueForEveryEntry(weather_data: dict, output_dict: dict):
-    return
+def getAverageValuesForEveryTimestamp(weather_data: dict, output_dict: dict):
+
+    readings = weather_data['readings']
+
+    # Get average humidity on that day
+    for entry in readings:
+        timestamp = entry['timestamp']
+        all_station_readings = entry['data']
+        station_count = len(all_station_readings)
+        total_humidity = 0
+        for station in all_station_readings:
+
+            total_humidity += station['value']
+        output_dict[timestamp] = total_humidity / station_count
+
+    return output_dict
 
 
 def createOutputDict(station_json_path: str, weather_data: dict):
@@ -425,3 +444,188 @@ def cleanupStationNames(stations_list: list, output_dict: dict):
             locations.append(reading[0])
         rainfall_values.append(reading[1])
     return locations, rainfall_values
+
+
+def plot_weather_hourly(title: str, measurement: str, date: str, hourly_data: dict):
+    import matplotlib.dates as mdates
+
+    timestamps = sorted(hourly_data.keys())
+    rainfall_values = [hourly_data[ts] for ts in timestamps]
+
+    plt.figure(figsize=(12, 6))
+    plt.plot(timestamps, rainfall_values,
+             label=f"{title} ({measurement})", marker="x", color="blue")
+    plt.title(f"{title} ({measurement}) in Singapore - {date}")
+    plt.xlabel("Time")
+    plt.ylabel(f"{measurement}")
+    plt.legend()
+    plt.grid(True)
+
+    # Get the current axes
+    ax = plt.gca()
+
+    # Set a custom date format on the x-axis
+    ax.xaxis.set_major_formatter(mdates.DateFormatter('%H:%M:%S'))
+
+    plt.xticks(rotation=45)
+    plt.tight_layout()
+    plt.show()
+
+
+def convert_to_datetime(aggregated_data):
+    return {
+        datetime.strptime(ts, "%Y-%m-%d %H:%M"): data
+        for ts, data in aggregated_data.items()
+    }
+
+
+def fetch_weekly_weather(start_date: str, storage_json_path: str, station_json_path: str, weather_type: str, data_format: str):
+    """
+    Fetch and aggregate total weather for one week.
+
+    Args:
+        start_date (str): Start date in YYYY-MM-DD format (Monday).
+
+    Returns:
+        dict: A dictionary containing daily total weather.
+    """
+    weekly_weather = {}
+    for i in range(7):  # Loop for 7 days (Monday to Sunday)
+        date = (datetime.strptime(start_date, "%Y-%m-%d") +
+                timedelta(days=i)).strftime("%Y-%m-%d")
+        print(f"Fetching data for {date}...")
+        storage_data = getDataFromStorage(storage_json_path)
+
+        readingUnit = storage_data["readingUnit"]
+
+        if date in storage_data:
+            print(f"Data for {date} already exists. Skipping...")
+            total_weather = storage_data[date]
+
+        elif data_format == "total":
+            weather_data = getDataTypeFromDate(weather_type, date)
+
+            output_dict = sumValuesForEveryStation(
+                weather_data, createOutputDict(station_json_path, weather_data))
+
+            # Aggregate total weather for the day
+            total_weather = sum([data[1] for data in output_dict.values()])
+            storage_data[date] = total_weather
+
+        elif data_format == "average":
+            weather_data = getDataTypeFromDate(weather_type, date)
+
+            output_dict = getAverageValuesForEveryStation(
+                weather_data, createOutputDict("temperature_stations.json", weather_data))
+
+            # Calculate average temperature for the day
+            total_weather = sum([data[1] for data in output_dict.values()])
+            num_stations = len(output_dict)
+            average_weather = total_weather / num_stations if num_stations > 0 else 0
+
+            storage_data[date] = average_weather
+
+        # Save the updated data to the JSON file
+        with open(storage_json_path, 'w') as file:
+            json.dump(storage_data, file, indent=4)
+
+        weekly_weather[date] = total_weather
+    return weekly_weather, readingUnit
+
+
+def plot_weekly_weather(title: str, readingUnit: str, date: str, weather_data: dict):
+    # Prepare data for plotting
+    days = list(weather_data.keys())
+    total_weather = list(weather_data.values())
+
+    # Plot the bar chart for weekly weather
+    plt.figure(figsize=(10, 6))
+    bars = plt.bar(days, total_weather, color="skyblue")
+
+    # Add labels and title
+    plt.xlabel("Date")
+    plt.ylabel(readingUnit)
+    plt.title(f'{title} from {days[0]} to {days[-1]}')
+
+    # Rotate x-axis labels for readability
+    plt.xticks(rotation=45, ha='right')
+
+    # Adjust layout to prevent label cut-off
+    plt.tight_layout()
+
+    # Add weather values on top of the bars
+    for bar, value in zip(bars, total_weather):
+        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(),
+                 f'{value:.1f}', ha='center', va='bottom')
+
+    # Show the plot
+    plt.show()
+
+def store_daily_weather(year, month, output_file, weather_type: str, data_format: str):
+    """
+    Fetch and store average relative weather for each day in a month in a JSON file.
+
+    Args:
+        year (int): Year of the data.
+        month (int): Month of the data (1-12).
+        output_file (str): Path to the JSON file where data will be stored.
+
+    Returns:
+        dict: A dictionary containing daily average weather for the month.
+    """
+
+    # Get the number of days in the month
+    num_days = monthrange(year, month)[1]
+
+    # Load existing data if the file exists
+    if os.path.exists(output_file):
+        with open(output_file, 'r') as file:
+            all_data = json.load(file)
+    else:
+        all_data = {}
+
+    monthly_weather = {}
+    for day in range(1, num_days + 1):
+        date = f"{year}-{month:02d}-{day:02d}"
+        print(f"Fetching data for {date}...")
+
+        if date in all_data:
+            print(f"Data for {date} already exists. Skipping...")
+            monthly_weather[date] = all_data[date]
+            continue
+        elif data_format == 'average':
+            # Fetch weather data for the date
+            weather_data = getDataTypeFromDate(weather_type, date)
+            if weather_data is None:
+                print(f"No data available for {date}.")
+                continue
+
+            output_dict = getAverageValuesForEveryStation(weather_data, createOutputDict(
+                "weather_stations.json", weather_data))
+
+            # Aggregate average weather for the day
+            total_weather = sum([data[1] for data in output_dict.values()])
+            num_stations = len(output_dict)
+            average_weather = total_weather / num_stations if num_stations > 0 else 0
+            monthly_weather[date] = average_weather
+            all_data[date] = average_weather
+
+        elif data_format == 'total':
+            # Fetch rainfall data for the date
+            weather_data = getDataTypeFromDate(weather_type, date)
+            if weather_data is None:
+                print(f"No data available for {date}.")
+                continue
+            output_dict = sumValuesForEveryStation(
+                weather_data, createOutputDict("rainfall_stations.json", weather_data))
+
+            # Aggregate total rainfall for the day
+            total_weather = sum([data[1] for data in output_dict.values()])
+            monthly_weather[date] = total_weather
+            all_data[date] = total_weather
+
+        # Save the updated data to the JSON file
+        with open(output_file, 'w') as file:
+            json.dump(all_data, file, indent=4)
+
+    return monthly_weather

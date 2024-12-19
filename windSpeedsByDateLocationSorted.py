@@ -1,11 +1,11 @@
 import matplotlib.pyplot as plt
-from helper_functions import getDataTypeFromDate, getAverageValuesForEveryStation, createOutputDict, cleanupStationNames, import_dictionaries
+from helper_functions import getDataTypeFromDate, getAverageValuesForEveryStation, sumValuesForEveryStation, createOutputDict, cleanupStationNames, import_dictionaries
 
 '''
 Helper Functions
 '''
 
-def plotAverageTemperatureByDate(locations, temperature_values, district_map, zone_color_map):
+def plotWeatherByDateLocationSorted(title:str, readingUnit: str, date: str, locations, temperature_values, district_map, zone_color_map):
     # Plotting Air Temperature Data
     # 1. Sorted by Zones
 
@@ -30,8 +30,8 @@ def plotAverageTemperatureByDate(locations, temperature_values, district_map, zo
 
     # Add labels and title
     plt.xlabel('Locations')
-    plt.ylabel('Average Air Temperature (°C)')
-    plt.title(f'Average Air Temperature by Location on {date}, Sorted by Zone')
+    plt.ylabel(readingUnit)
+    plt.title(f'{title} by Location on {date}, Sorted by Zone')
 
     # Rotate x-axis labels for readability
     plt.xticks(rotation=45, ha='right')
@@ -58,15 +58,24 @@ if __name__ == '__main__':
 
     # Run helper functions to get air temperature data and prepare for plotting
     date = '2024-11-29'  # Define the desired date in YYYY-MM-DD format
-    temperature_data = getDataTypeFromDate('air-temperature', date)
+    wspeed_data = getDataTypeFromDate('wind-speed', date)
 
-    if temperature_data is None:
+    # Error Handling for missing Data
+    if wspeed_data is None:
         print("No data available for the specified date.")
         exit()
-    if not temperature_data["complete_data"]:
-        print(f"Only partial data found on these dates - {temperature_data['partial_data_dates']}")   
-    output_dict = getAverageValuesForEveryStation(
-        temperature_data, createOutputDict("temperature_stations.json", temperature_data))
-    locations, temperature_values = cleanupStationNames(temperature_data['stations'], output_dict)
+    if not wspeed_data["complete_data"]:
+        print(f"Only partial data found on these dates - {wspeed_data['partial_data_dates']}")   
 
-    plotAverageTemperatureByDate(locations, temperature_values, district_map, zone_color_map)
+    # Preparing Average Wind Speeds data object
+    avg_ws_output_dict = getAverageValuesForEveryStation(
+        wspeed_data, createOutputDict("wind_stations.json", wspeed_data))
+    avg_ws_locations, avg_ws_values = cleanupStationNames(wspeed_data['stations'], avg_ws_output_dict)
+
+    # Preparing Total Wind Speeds data object
+    total_ws_output_dict = sumValuesForEveryStation(
+        wspeed_data, createOutputDict("wind_stations.json", wspeed_data))
+    total_ws_locations, total_ws_values = cleanupStationNames(wspeed_data['stations'], total_ws_output_dict)
+
+    plotWeatherByDateLocationSorted("Average Wind Speed", wspeed_data["readingUnit"], date, avg_ws_locations, avg_ws_values, district_map, zone_color_map)
+    plotWeatherByDateLocationSorted("Total Wind Speed", wspeed_data["readingUnit"], date, total_ws_locations, total_ws_values, district_map, zone_color_map)

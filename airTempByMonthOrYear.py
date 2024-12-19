@@ -1,7 +1,7 @@
 import json
 import os
 import matplotlib.pyplot as plt
-from helper_functions import getDataTypeFromDate, createOutputDict, averageValuesInDict
+from helper_functions import getDataTypeFromDate, createOutputDict, getAverageValuesForEveryStation
 from calendar import monthrange
 
 def store_daily_temperature(year, month, output_file):
@@ -42,7 +42,7 @@ def store_daily_temperature(year, month, output_file):
                 print(f"No data available for {date}.")
                 continue
 
-            output_dict = averageValuesInDict(temperature_data, createOutputDict("temperature_stations.json", temperature_data))
+            output_dict = getAverageValuesForEveryStation(temperature_data, createOutputDict("temperature_stations.json", temperature_data))
 
             # Aggregate average temperature for the day
             total_temperature = sum([data[1] for data in output_dict.values()])
@@ -125,5 +125,5 @@ def plotTemperatureByYear(year, output_file):
 
 if __name__ == '__main__':  
     OUTPUT_FILE = "daily_average_temperature_data.json"
-    #plotTemperatureByMonth(2023, 1, OUTPUT_FILE)
-    plotTemperatureByYear(2024, OUTPUT_FILE)
+    plotTemperatureByMonth(2024, 1, OUTPUT_FILE)
+    #plotTemperatureByYear(2024, OUTPUT_FILE)
