@@ -1,0 +1,102 @@
+{
+    "district_map": {
+        "North": [
+            "Ang Mo Kio Avenue 5",
+            "Kim Chuan Road",
+            "Kranji Way",
+            "Mandai Lake Road",
+            "Punggol Central",
+            "Yishun Ring Road",
+            "Woodlands Centre",
+            "Kranji Road",
+            "Ang Mo Kio Avenue 10",
+            "Bishan Street 13",
+            "Yio Chu Kang Road",
+            "Compassvale Lane",
+            "Woodlands Drive 62",
+            "Seletar Aerospace View",
+            "Upper Thomson Road",
+            "Woodlands Avenue 9",
+            "Woodlands Road",
+            "Upper Peirce Reservoir Park",
+            "Upper Serangoon Road",
+            "Yishun Avenue 5",
+            "Sembawang Road",
+            "Buangkok Green",
+            "Hougang Avenue 1"
+        ],
+        "South": [
+            "Alexandra Road",
+            "Henderson Road",
+            "Margaret Drive",
+            "Malan Road",
+            "Sentosa"
+        ],
+        "East": [
+            "East Coast Parkway",
+            "GEYLANG EAST CENTRAL",
+            "Marine Parade Road",
+            "Pasir Ris Street 51",
+            "Poole Road",
+            "Bedok Road",
+            "Changi East Close",
+            "Tanjong Rhu",
+            "Airport Boulevard",
+            "Simei Avenue",
+            "Upper Changi Road North",
+            "Pulau Ubin",
+            "Paya Lebar",
+            "Chai Chee Street",
+            "Pasir Ris Drive 12"
+        ],
+        "West": [
+            "Choa Chu Kang Avenue 4",
+            "Clementi Road",
+            "Jurong Pier Road",
+            "Kent Ridge Road",
+            "Lim Chu Kang Road",
+            "Nanyang Avenue",
+            "Old Choa Chu Kang Road",
+            "Clementi Park",
+            "Pasir Panjang",
+            "Bukit Batok Street 34",
+            "Jurong West Street 73",
+            "Jurong West Street 42",
+            "West Coast Road",
+            "Tuas Road",
+            "West Coast Highway",
+            "Tuas South Avenue 3",
+            "Banyan Road",
+            "Tuas West Road",
+            "South Buona Vista Road",
+            "Corporation Road",
+            "Choa Chu Kang Road",
+            "Old Toh Tuck Road",
+            "Bukit Panjang Road"
+        ],
+        "City": [
+            "Marina Gardens Drive",
+            "Nicoll Highway"
+        ],
+        "Central": [
+            "Bukit Timah Road",
+            "Handy Road",
+            "Holland Road",
+            "Coronation Walk",
+            "Somerset Road",
+            "Toa Payoh North",
+            "Towner Road",
+            "Scotts Road",
+            "Sime Road",
+            "Lornie Road"
+        ]
+    },
+    "zone_color_map": {
+        "North": "blue",
+        "South": "green",
+        "East": "red",
+        "West": "purple",
+        "City": "orange",
+        "Central": "cyan"
+    }
+}
