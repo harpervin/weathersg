@@ -1,8 +1,15 @@
 import json
 import os
-import matplotlib.pyplot as plt
-from helper_functions import getDataTypeFromDate, createOutputDict, sumValuesForEveryStation
 from calendar import monthrange
+
+import matplotlib.pyplot as plt
+
+from helper_functions import (
+    createOutputDict,
+    getDataTypeFromDate,
+    sumValuesForEveryStation,
+)
+
 
 def store_daily_rainfall(year, month, output_file):
     """
@@ -21,7 +28,7 @@ def store_daily_rainfall(year, month, output_file):
 
     # Load existing data if the file exists
     if os.path.exists(output_file):
-        with open(output_file, 'r') as file:
+        with open(output_file, "r") as file:
             all_data = json.load(file)
     else:
         all_data = {}
@@ -37,12 +44,14 @@ def store_daily_rainfall(year, month, output_file):
             continue
         else:
             # Fetch rainfall data for the date
-            rainfall_data = getDataTypeFromDate('rainfall', date)
+            rainfall_data = getDataTypeFromDate("rainfall", date)
             if rainfall_data is None:
                 print(f"No data available for {date}.")
                 continue
 
-            output_dict = sumValuesForEveryStation(rainfall_data, createOutputDict("rainfall_stations.json", rainfall_data))
+            output_dict = sumValuesForEveryStation(
+                rainfall_data, createOutputDict("rainfall_stations.json", rainfall_data)
+            )
 
             # Aggregate total rainfall for the day
             total_rainfall = sum([data[1] for data in output_dict.values()])
@@ -52,10 +61,11 @@ def store_daily_rainfall(year, month, output_file):
             all_data[date] = total_rainfall
 
             # Save the updated data to the JSON file
-            with open(output_file, 'w') as file:
+            with open(output_file, "w") as file:
                 json.dump(all_data, file, indent=4)
 
     return monthly_rainfall
+
 
 def plotRainfallByMonth(year, month, output_file):
     # Store and fetch monthly rainfall data
@@ -70,22 +80,29 @@ def plotRainfallByMonth(year, month, output_file):
     bars = plt.bar(days, total_rainfall, color="steelblue")
 
     # Add labels and title
-    plt.xlabel('Date')
-    plt.ylabel('Total Rainfall (mm)')
-    plt.title(f'Total Rainfall in {year}-{month:02d}')
+    plt.xlabel("Date")
+    plt.ylabel("Total Rainfall (mm)")
+    plt.title(f"Total Rainfall in {year}-{month:02d}")
 
     # Rotate x-axis labels for readability
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
 
     # Adjust layout to prevent label cut-off
     plt.tight_layout()
 
     # Add rainfall values on top of the bars
     for bar, value in zip(bars, total_rainfall):
-        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{value:.1f}', ha='center', va='bottom')
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height(),
+            f"{value:.1f}",
+            ha="center",
+            va="bottom",
+        )
 
     # Show the plot
     plt.show()
+
 
 def plotRainfallByYear(year, output_file):
     # Fetch yearly rainfall data
@@ -104,24 +121,31 @@ def plotRainfallByYear(year, output_file):
     bars = plt.bar(months, total_rainfall, color="darkblue")
 
     # Add labels and title
-    plt.xlabel('Month')
-    plt.ylabel('Total Rainfall (mm)')
-    plt.title(f'Total Rainfall in {year}')
+    plt.xlabel("Month")
+    plt.ylabel("Total Rainfall (mm)")
+    plt.title(f"Total Rainfall in {year}")
 
     # Rotate x-axis labels for readability
-    plt.xticks(rotation=45, ha='right')
+    plt.xticks(rotation=45, ha="right")
 
     # Adjust layout to prevent label cut-off
     plt.tight_layout()
 
     # Add rainfall values on top of the bars
     for bar, value in zip(bars, total_rainfall):
-        plt.text(bar.get_x() + bar.get_width() / 2, bar.get_height(), f'{value:.1f}', ha='center', va='bottom')
+        plt.text(
+            bar.get_x() + bar.get_width() / 2,
+            bar.get_height(),
+            f"{value:.1f}",
+            ha="center",
+            va="bottom",
+        )
 
     # Show the plot
     plt.show()
 
-if __name__ == '__main__':  
+
+if __name__ == "__main__":
     OUTPUT_FILE = "daily_total_rainfall_data.json"
-    #plotRainfallByMonth(2023, 1, OUTPUT_FILE)
-    plotRainfallByYear(2022, OUTPUT_FILE)
+    # plotRainfallByMonth(2023, 1, OUTPUT_FILE)
+    plotRainfallByYear(2024, OUTPUT_FILE)

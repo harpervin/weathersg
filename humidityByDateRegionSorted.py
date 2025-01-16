@@ -79,7 +79,7 @@ if __name__ == '__main__':
     district_map, zone_color_map = import_dictionaries()
 
     # Define the desired date in YYYY-MM-DD format
-    date = '2024-11-29'
+    date = '2025-01-11'
 
     # Plot average humidity by region
     plotAverageHumidityByRegion(date, district_map, zone_color_map)
