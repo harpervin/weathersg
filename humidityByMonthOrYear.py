@@ -116,7 +116,7 @@ def plotHumidityByYear(year, output_file):
     plt.xlabel('Month')
     plt.ylabel('Average Relative Humidity (%)')
     plt.title(f'Average Relative Humidity in {year}')
-
+ 
     # Rotate x-axis labels for readability
     plt.xticks(rotation=45, ha='right')
 
@@ -135,4 +135,5 @@ def plotHumidityByYear(year, output_file):
 if __name__ == '__main__':
     OUTPUT_FILE = "daily_average_humidity_data.json"
     # plotHumidityByMonth(2023, 1, OUTPUT_FILE)
-    plotHumidityByYear(2023, OUTPUT_FILE)
+    plotHumidityByYear(2022, OUTPUT_FILE)
+ 
