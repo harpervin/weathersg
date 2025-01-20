@@ -1,0 +1,17 @@
+# weather_data dependencies
+/__pycache__/
+/.ipynb_checkpoints/
+*.docx
+
+# OS-specific files
+.DS_Store
+Thumbs.db
+
+# IDE/editor-specific files
+.idea/
+.vscode/
+*.swp
+*.swo
+*.swn
+*.swn~
+*.tmp
