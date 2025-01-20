@@ -1,11 +1,11 @@
-# WeatherSG App 🌦️
+# WeatherSG 🌦️
 
-A weather visualization dashboard built with [Next.js](https://nextjs.org/), leveraging geospatial mapping and interactive visualizations to display Singapore’s weather data.
+A weather visualization dashboard built with [Next.js](https://nextjs.org/), with a geospatial map of Singapore and interactive visualizations to display local weather data.
 
 ## Features
 
-- 🗺️ **Interactive Geospatial Map**: Visualize Singapore’s weather patterns with overlays for wind directions, rainfall, and more using [Leaflet](https://leafletjs.com/).
-- 📊 **Dynamic Data Visualizations**: Bar charts and regression graphs built with [Chart.js](https://www.chartjs.org/), toggled by user interaction.
+- 🗺️ **Interactive Geospatial Map**: Visualize Singapore’s weather patterns with overlays for wind directions, rainfall, humidity, and air temperature using [Leaflet](https://leafletjs.com/).
+- 📊 **Dynamic Data Visualizations**: Bar charts and regression graphs built with [Chart.js](https://www.chartjs.org/), and Python scripts for weather data collection.
 
 ---
 
@@ -50,7 +50,8 @@ Ensure you have the following installed on your machine:
 ## Project Structure
 
 ```
-weathersg-app/
+weather_data/            # (Backend) Python scripts to collect weather data, and JSON files which contain raw weather data
+weathersg-app/           # (Frontend)
 ├── public/              # Static assets (images, fonts, etc.)
 ├── src/
 │   ├── app/             # Next.js main page
