@@ -760,3 +760,115 @@ def store_daily_weather(year, month, output_file, weather_type: str, data_format
             json.dump(all_data, file, indent=4)
 
     return monthly_weather
+
+
+# ----------------------------
+# Cache Read/Write Helpers
+# ----------------------------
+
+
+def load_daily_cache(cache_filename):
+    """
+    Loads the JSON file that stores daily data in the form:
+    {
+      "YYYY-MM-DD": {
+        "station_id": <float_total_for_that_day>,
+        ...
+      },
+      ...
+    }
+    Returns a dict, or empty if file not found.
+    """
+    if not os.path.exists(cache_filename):
+        return {}
+    with open(cache_filename, 'r') as f:
+        return json.load(f)
+    
+def save_daily_cache(cache, cache_filename):
+    """
+    Saves 'cache' (a dict) to the specified JSON file.
+    """
+    with open(cache_filename, 'w') as f:
+        json.dump(cache, f, indent=2)
+        
+# ----------------------------
+# 3) Get or Load Daily Data
+# ----------------------------
+
+
+def get_or_load_daily_total_data(date_str, cache, cache_filename, weather_type: str):
+    """
+    Returns a dict of { stationId: float_daily_value } for the given date_str.
+
+    - Checks if date_str is already in the 'cache' (daily_rainfall_by_location_{year}.json).
+    - If found, returns it directly (avoiding a new API call).
+    - Otherwise, calls getDataTypeFromDate("rainfall", date_str), sums up that day's data,
+      stores the result in the cache, writes to file, and returns it.
+    - If no data from the API, store an empty dict for that date_str so we don't repeatedly call.
+    """
+    if date_str in cache:
+        # Already cached -> no new API call
+        print(f"[CACHE-HIT] Daily data for {date_str}")
+        return cache[date_str]
+
+    print(f"[CACHE-MISS] Fetching daily data for {date_str} from API...")
+    # Call your existing helper function
+    weather_data = getDataTypeFromDate(weather_type, date_str)
+    if not weather_data or "stations" not in weather_data:
+        # Store an empty dict to skip future calls for this date
+        cache[date_str] = {}
+        save_daily_cache(cache, cache_filename)
+        return {}
+
+    # We have a day's worth of data -> sum it by station
+    # We'll replicate some logic of sumValuesForEveryStation, but for just a single day.
+    # Or you can adapt your function directly. For clarity, let's do it inline:
+    daily_dict = {}
+    readings = weather_data.get("readings", [])
+    for entry in readings:
+        for station_reading in entry.get("data", []):
+            station_id = station_reading["stationId"]
+            station_val = station_reading["value"]
+            daily_dict[station_id] = daily_dict.get(station_id, 0.0) + station_val
+
+    # Store in cache
+    cache[date_str] = daily_dict
+    save_daily_cache(cache, cache_filename)
+    return daily_dict
+
+# ----------------------------
+# 3) Get or Load Daily Data
+# ----------------------------
+
+def get_or_load_daily_average_data(date_str, cache, cache_filename, data_type):
+    if date_str in cache:
+        print(f"[CACHE-HIT] Daily data for {date_str}")
+        return cache[date_str]
+
+    print(f"[CACHE-MISS] Fetching daily data for {date_str} from API...")
+    weather_data = getDataTypeFromDate(data_type, date_str)
+    if not weather_data or "readings" not in weather_data:
+        cache[date_str] = {}
+        save_daily_cache(cache, cache_filename)
+        return {}
+
+    daily_dict = {}
+    station_counts = {}
+    readings = weather_data.get("readings", [])
+    for entry in readings:
+        for station_reading in entry.get("data", []):
+            station_id = station_reading["stationId"]
+            station_val = station_reading["value"]
+            if station_id not in daily_dict:
+                daily_dict[station_id] = 0.0
+                station_counts[station_id] = 0
+            daily_dict[station_id] += station_val
+            station_counts[station_id] += 1
+
+    # Calculate daily averages for each station
+    for station_id in daily_dict:
+        daily_dict[station_id] /= station_counts[station_id]
+
+    cache[date_str] = daily_dict
+    save_daily_cache(cache, cache_filename)
+    return daily_dict
