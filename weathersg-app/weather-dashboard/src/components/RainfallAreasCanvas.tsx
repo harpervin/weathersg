@@ -1,4 +1,4 @@
-import React, { useEffect, useRef, useState } from "react";
+import React, { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 
 type RainfallCanvasProps = {
@@ -10,10 +10,11 @@ type RainfallCanvasProps = {
     }[];
 };
 
-const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
+const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
+    stations,
+}) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
-    const [hasRainfall, setHasRainfall] = useState(false); // State to track rainfall
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -21,7 +22,9 @@ const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
 
         // Adjust canvas dimensions to match map container
         const resizeCanvas = () => {
-            const { width, height } = map.getContainer().getBoundingClientRect();
+            const { width, height } = map
+                .getContainer()
+                .getBoundingClientRect();
             canvas.width = width;
             canvas.height = height;
         };
@@ -40,7 +43,7 @@ const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
 
         const updateRaindrops = () => {
             raindrops = raindrops.map((drop) => {
-                const newY = drop.y + drop.speed;
+                let newY = drop.y + drop.speed;
                 if (newY > canvas.height) {
                     // Reset raindrop to the top
                     return {
@@ -56,15 +59,13 @@ const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
         };
 
         const drawOverlayAndRainfall = () => {
-            // Check if there are any rainfall readings > 0
-            const hasRainfallData = stations.some(
+            const hasRainfall = stations.some(
                 (station) => station.rainfall > 0
             );
-            setHasRainfall(hasRainfallData); // Update state
 
-            if (!hasRainfallData) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-                return; // Skip rendering if no rainfall
+            if (!hasRainfall) {
+                ctx.clearRect(0, 0, canvas.width, canvas.height);
+                return; // Do not render if no station has rainfall > 0
             }
 
             // Draw translucent blue overlay
@@ -143,39 +144,19 @@ const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
     }, [stations, map]);
 
     return (
-        <div style={{ position: "relative" }}>
-            <canvas
-                ref={canvasRef}
-                style={{
-                    position: "absolute",
-                    top: 0,
-                    left: 0,
-                    width: "100%",
-                    height: "100%",
-                    pointerEvents: "none",
-                    zIndex: 10000, // Ensure it's above the map
-                }}
-            />
-            {!hasRainfall && (
-                <div
-                    style={{
-                        position: "absolute",
-                        top: "100px", // Adjust tooltip position
-                        left: "10px", // Adjust tooltip position
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
-                        color: "white",
-                        padding: "8px 12px",
-                        borderRadius: "4px",
-                        zIndex: 10001, // Ensure it's above other elements
-                        fontSize: "16px",
-                        textAlign: "center",
-                    }}
-                >
-                    No rainfall detected at any station.
-                </div>
-            )}
-        </div>
+        <canvas
+            ref={canvasRef}
+            style={{
+                position: "absolute",
+                top: 0,
+                left: 0,
+                width: "100%",
+                height: "100%",
+                pointerEvents: "none",
+                zIndex: 10000, // Ensure it's above the map
+            }}
+        />
     );
 };
 
-export default RainfallAreasCanvas;
+export default RainfallReadingsCanvas;
