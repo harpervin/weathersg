@@ -62,7 +62,7 @@ export default function Page() {
                 {/* Checkbox Section */}
                 <div className="p-4 bg-gray-100 rounded shadow-lg ml-4">
                     <h2 className="text-lg font-semibold mb-2">
-                        Weather Filters
+                        Wind
                     </h2>
                     <CheckboxGroup
                         options={[
@@ -73,6 +73,22 @@ export default function Page() {
                             },
                             { label: "Wind Direction" },
                             { label: "Wind Speed" },
+                        ]}
+                        value={selectedLayers.filter(
+                            (layer) =>
+                                ![
+                                    "AllRainfallReadings",
+                                    "RainfallAreas",
+                                ].includes(layer)
+                        )} // Remove rainfall options from checkboxes
+                        onChange={handleCheckboxChange}
+                    />
+					<hr className="my-2" />
+					<h2 className="text-lg font-semibold mb-2">
+                        Air
+                    </h2>
+					<CheckboxGroup
+                        options={[
                             { label: "Air Temperature" },
                             { label: "Humidity" },
                         ]}
@@ -85,7 +101,6 @@ export default function Page() {
                         )} // Remove rainfall options from checkboxes
                         onChange={handleCheckboxChange}
                     />
-
                     <hr className="my-2" />
 					<h2 className="text-lg font-semibold mb-2">
                         Precipitation
