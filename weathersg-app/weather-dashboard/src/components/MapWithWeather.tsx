@@ -90,7 +90,7 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
     }, []);
 
     return (
-        <div style={{ height: "100vh", width: "100%", position: "relative" }}>
+        <div style={{ height: "80vh", width: "100%", position: "relative" }}>
             <MapContainer
                 center={[1.3521, 103.8198]}
                 zoom={12}
@@ -119,15 +119,15 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
                         <AirTemperatureCanvas stations={temperatures} />
                     )}
                 {selectedLayers.includes("Humidity") &&
-                    temperatures.length > 0 && (
+                    humidity.length > 0 && (
                         <HumidityCanvas stations={humidity} />
                     )}
                 {selectedLayers.includes("AllRainfallReadings") &&
-                    temperatures.length > 0 && (
+                    rainfall.length > 0 && (
                         <RainfallReadingsCanvas stations={rainfall} />
                     )}
                 {selectedLayers.includes("RainfallAreas") &&
-                    temperatures.length > 0 && (
+                    rainfall.length > 0 && (
                         <                RainfallAreasCanvas
                         stations={rainfall} />
                     )}

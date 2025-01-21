@@ -50,12 +50,14 @@ export default function Page() {
     };
 
     return (
-        <main className="p-8 flex flex-col space-y-8 overflow-y-auto">
+        <main className="p-8 flex flex-col space-y-2 overflow-y-auto">
             {/* Map and Checkbox Section */}
+			<h1 className="text-2xl font-bold mb-1">WeatherSG</h1>
+			<hr/>
             <div className="flex">
                 {/* Map Section */}
                 <div className="flex-1">
-                    <h1 className="text-2xl font-bold mb-4">WeatherSG</h1>
+                    <span className="font-medium mb-4">Realtime Weather Map</span>
                     <MapWithWeather selectedLayers={selectedLayers} />
                 </div>
 
@@ -130,6 +132,8 @@ export default function Page() {
                     </div>
                 </div>
             </div>
+
+			<hr className="my-2" />
 
             {/* Tabbed Bar Chart Section */}
             <div>
