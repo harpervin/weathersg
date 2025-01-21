@@ -1,3 +1,5 @@
+import { Station, Data} from "@/types/typedefs";
+
 export type StationHumidityData = {
     id: string;
     name: string;
@@ -14,9 +16,9 @@ export const fetchHumidityData = async (): Promise<StationHumidityData[]> => {
     const humidityData = await humidityResponse.json();
     // console.log(`Wind Speed API: ${windSpeedData.data.stations.length} stations, ${windSpeedData.data.readings[0].data.length} readings`);
 
-    const stations = humidityData.data.stations.map((station: any) => {
+    const stations = humidityData.data.stations.map((station: Station) => {
         const humidityReading = humidityData.data.readings[0].data.find(
-            (d: any) => d.stationId === station.id
+            (d: Data) => d.stationId === station.id
         );
 
         const humidity = humidityReading?.value || 0;

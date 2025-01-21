@@ -1,3 +1,6 @@
+import { Station, Data } from "@/types/typedefs";
+
+
 export type StationRainfallData = {
     id: string;
     name: string;
@@ -13,9 +16,9 @@ export const fetchRainfallData = async (): Promise<StationRainfallData[]> => {
     );
     const rainfallData = await rainfallResponse.json();
 
-    const stations = rainfallData.data.stations.map((station: any) => {
+    const stations = rainfallData.data.stations.map((station: Station) => {
         const rainfallReading = rainfallData.data.readings[0].data.find(
-            (d: any) => d.stationId === station.id
+            (d: Data) => d.stationId === station.id
         );
 
         const rainfall = rainfallReading?.value || 0;

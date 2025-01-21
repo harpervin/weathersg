@@ -1,9 +1,7 @@
 "use client";
 
 import React, { useState } from "react";
-import { Bar } from "react-chartjs-2";
 import "chart.js/auto"; // Automatically register Chart.js components
-import { DateRangePicker } from "react-date-range";
 import "react-date-range/dist/styles.css"; // Main stylesheet
 import "react-date-range/dist/theme/default.css"; // Theme stylesheet
 import Tabs from "./Tabs";
