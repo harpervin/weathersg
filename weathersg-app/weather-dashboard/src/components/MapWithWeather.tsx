@@ -8,7 +8,8 @@ import WindDirectionCanvas from "./WindDirectionCanvas";
 import WindSpeedCanvas from "./WindSpeedCanvas";
 import AirTemperatureCanvas from "./AirTemperatureCanvas";
 import HumidityCanvas from "./HumidityCanvas";
-import PrecipitationCanvas from "./PrecipitationCanvas";
+import RainfallReadingsCanvas from "./RainfallReadingsCanvas";
+import RainfallAreasCanvas from "./RainfallAreasCanvas";
 import MapTextOverlay from "./MapTextOverlay";
 
 import { fetchWindData, StationData } from "../utils/windData";
@@ -17,10 +18,7 @@ import {
     fetchTemperatureData,
     StationTemperatureData,
 } from "@/utils/airTemperatureData";
-import {
-    fetchPrecipitationData,
-    StationPrecipitationData,
-} from "@/utils/precipitationData";
+import { fetchRainfallData, StationRainfallData } from "@/utils/rainfallData";
 
 type MapWithWeatherProps = {
     selectedLayers: string[]; // Prop to control wind stream visibility
@@ -48,6 +46,7 @@ const CenterButton: React.FC = () => {
                 borderRadius: "4px",
                 cursor: "pointer",
                 fontWeight: "bold",
+                fontSize: "14px",
             }}
         >
             Reset Map
@@ -61,9 +60,7 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
         []
     );
     const [humidity, setHumidity] = useState<StationHumidityData[]>([]);
-    const [precipitation, setPrecipitation] = useState<
-        StationPrecipitationData[]
-    >([]);
+    const [rainfall, seRainfall] = useState<StationRainfallData[]>([]);
 
     useEffect(() => {
         const loadWeatherData = async () => {
@@ -76,8 +73,8 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
             const humidityData = await fetchHumidityData();
             setHumidity(humidityData);
 
-            const precipitationData = await fetchPrecipitationData();
-            setPrecipitation(precipitationData);
+            const rainfallData = await fetchRainfallData();
+            seRainfall(rainfallData);
         };
 
         // Initial load
@@ -104,6 +101,7 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
+                
                 {selectedLayers.includes("Windstream") &&
                     stations.length > 0 && (
                         <WindstreamCanvas stations={stations} />
@@ -124,11 +122,15 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
                     temperatures.length > 0 && (
                         <HumidityCanvas stations={humidity} />
                     )}
-                {selectedLayers.includes("Precipitation") &&
+                {selectedLayers.includes("AllRainfallReadings") &&
                     temperatures.length > 0 && (
-                        <PrecipitationCanvas stations={precipitation} />
+                        <RainfallReadingsCanvas stations={rainfall} />
                     )}
-
+                {selectedLayers.includes("RainfallAreas") &&
+                    temperatures.length > 0 && (
+                        <                RainfallAreasCanvas
+                        stations={rainfall} />
+                    )}
                 {/* Add the Singapore text overlay */}
                 <MapTextOverlay
                     position={[1.3521, 103.8198]} // Singapore's coordinates
@@ -141,7 +143,6 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
                         stroke: "black",
                     }}
                 />
-
                 {/* Add the CenterButton inside the MapContainer */}
                 <CenterButton />
             </MapContainer>

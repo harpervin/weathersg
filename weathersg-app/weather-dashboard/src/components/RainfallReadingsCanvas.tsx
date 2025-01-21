@@ -1,7 +1,7 @@
 import React, { useEffect, useRef } from "react";
 import { useMap } from "react-leaflet";
 
-type PrecipitationCanvasProps = {
+type RainfallCanvasProps = {
     stations: {
         id: string;
         latitude: number;
@@ -10,7 +10,7 @@ type PrecipitationCanvasProps = {
     }[];
 };
 
-const PrecipitationCanvas: React.FC<PrecipitationCanvasProps> = ({
+const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
     stations,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -59,20 +59,26 @@ const PrecipitationCanvas: React.FC<PrecipitationCanvasProps> = ({
         };
 
         const drawOverlayAndRainfall = () => {
-            // Draw translucent blue overlay
-            ctx.fillStyle = "rgba(0, 0, 255, 0.05)";
-            ctx.fillRect(0, 0, canvas.width, canvas.height);
+            const hasRainfall = stations.some(
+                (station) => station.rainfall > 0
+            );
 
-            // Draw raindrops
-            ctx.strokeStyle = "rgba(0, 0, 255, 0.5)";
-            ctx.lineWidth = 1.5;
+            if (hasRainfall) {
+                // Draw translucent blue overlay
+                ctx.fillStyle = "rgba(0, 0, 255, 0.03)";
+                ctx.fillRect(0, 0, canvas.width, canvas.height);
 
-            raindrops.forEach((drop) => {
-                ctx.beginPath();
-                ctx.moveTo(drop.x, drop.y);
-                ctx.lineTo(drop.x, drop.y + drop.length);
-                ctx.stroke();
-            });
+                // Draw raindrops
+                ctx.strokeStyle = "rgba(0, 0, 255, 0.5)";
+                ctx.lineWidth = 1.5;
+
+                raindrops.forEach((drop) => {
+                    ctx.beginPath();
+                    ctx.moveTo(drop.x, drop.y);
+                    ctx.lineTo(drop.x, drop.y + drop.length);
+                    ctx.stroke();
+                });
+            }
 
             // Draw rainfall data at station locations
             stations.forEach((station) => {
@@ -92,7 +98,7 @@ const PrecipitationCanvas: React.FC<PrecipitationCanvasProps> = ({
                 ctx.beginPath();
                 ctx.roundRect(
                     x - rectWidth / 2, // Top-left x
-                    y - rectHeight - 20, // Top-left y (offset above the station)
+                    y - rectHeight, // Top-left y (offset above the station)
                     rectWidth, // Width
                     rectHeight, // Height
                     radius // Corner radius
@@ -111,7 +117,7 @@ const PrecipitationCanvas: React.FC<PrecipitationCanvasProps> = ({
                 ctx.fillText(
                     `${station.rainfall.toFixed(1)} mm`,
                     x,
-                    y - rectHeight / 2 - 20 // Center text within the rectangle
+                    y - rectHeight / 2 // Center text within the rectangle
                 );
             });
         };
@@ -120,7 +126,9 @@ const PrecipitationCanvas: React.FC<PrecipitationCanvasProps> = ({
         const animate = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
             drawOverlayAndRainfall();
-            updateRaindrops();
+            if (stations.some((station) => station.rainfall > 0)) {
+                updateRaindrops();
+            }
             requestAnimationFrame(animate);
         };
 
@@ -148,4 +156,4 @@ const PrecipitationCanvas: React.FC<PrecipitationCanvasProps> = ({
     );
 };
 
-export default PrecipitationCanvas;
+export default RainfallReadingsCanvas;

@@ -1,4 +1,4 @@
-export type StationPrecipitationData = {
+export type StationRainfallData = {
     id: string;
     name: string;
     latitude: number;
@@ -6,7 +6,7 @@ export type StationPrecipitationData = {
     rainfall: number; // Rainfall
 };
 
-export const fetchPrecipitationData = async (): Promise<StationPrecipitationData[]> => {
+export const fetchRainfallData = async (): Promise<StationRainfallData[]> => {
     // Fetch rainfall data
     const rainfallResponse = await fetch(
         "https://api-open.data.gov.sg/v2/real-time/api/rainfall"

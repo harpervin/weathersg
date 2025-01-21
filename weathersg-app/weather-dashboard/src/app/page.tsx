@@ -11,20 +11,42 @@ const MapWithWeather = dynamic(() => import("../components/MapWithWeather"), {
 
 export default function Page() {
     const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
-    const [isPrecipitationActive, setIsPrecipitationActive] = useState(false);
+    const [isRainfallMapActive, setIsRainfallMapActive] = useState(false);
+    const [isRainfallAreasActive, setIsRainfallAreasActive] = useState(false);
 
     const handleCheckboxChange = (checkedValues: string[]) => {
+        // Remove rainfall layers if any checkbox is clicked
+        if (isRainfallMapActive || isRainfallAreasActive) {
+            setIsRainfallMapActive(false);
+            setIsRainfallAreasActive(false);
+        }
+
+        // Update selected layers
         setSelectedLayers(checkedValues);
-        setIsPrecipitationActive(false); // Unclick the Precipitation button
     };
 
-    const handlePrecipitationBtnClick = () => {
-        if (isPrecipitationActive) {
-            setSelectedLayers([]); // Clear selected layers
+    const handleRainfallMapBtnClick = () => {
+        if (isRainfallMapActive) {
+            // Clear rainfall map and selected layers
+            setSelectedLayers([]);
         } else {
-            setSelectedLayers(["Precipitation"]); // Only select Precipitation
+            // Set rainfall map as the only selected layer
+            setSelectedLayers(["AllRainfallReadings"]);
         }
-        setIsPrecipitationActive(!isPrecipitationActive); // Toggle the button's state
+        setIsRainfallMapActive(!isRainfallMapActive);
+        setIsRainfallAreasActive(false); // Ensure rainfall areas are deselected
+    };
+
+    const handleRainfallAreasBtnClick = () => {
+        if (isRainfallAreasActive) {
+            // Clear rainfall areas and selected layers
+            setSelectedLayers([]);
+        } else {
+            // Set rainfall areas as the only selected layer
+            setSelectedLayers(["RainfallAreas"]);
+        }
+        setIsRainfallAreasActive(!isRainfallAreasActive);
+        setIsRainfallMapActive(false); // Ensure rainfall map is deselected
     };
 
     return (
@@ -44,30 +66,53 @@ export default function Page() {
                     </h2>
                     <CheckboxGroup
                         options={[
-							{ label: "Windstream", tooltip: "Displays windstream based on station readings over Singapore only." },
-							{ label: "Wind Direction"},
-							{ label: "Wind Speed"},
-							{ label: "Air Temperature"},
-							{ label: "Humidity"},
-						]}
+                            {
+                                label: "Windstream",
+                                tooltip:
+                                    "Displays windstream based on station readings over Singapore only.",
+                            },
+                            { label: "Wind Direction" },
+                            { label: "Wind Speed" },
+                            { label: "Air Temperature" },
+                            { label: "Humidity" },
+                        ]}
                         value={selectedLayers.filter(
-                            (layer) => layer !== "Precipitation"
-                        )} // Remove Precipitation from checkboxes
+                            (layer) =>
+                                ![
+                                    "AllRainfallReadings",
+                                    "RainfallAreas",
+                                ].includes(layer)
+                        )} // Remove rainfall options from checkboxes
                         onChange={handleCheckboxChange}
                     />
 
                     <hr className="my-2" />
-
-                    <button
-                        onClick={handlePrecipitationBtnClick}
-                        className={`px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
-                            isPrecipitationActive
-                                ? "bg-blue-400 text-white"
-                                : "bg-blue-200 hover:bg-blue-400 hover:text-white"
-                        }`}
-                    >
+					<h2 className="text-lg font-semibold mb-2">
                         Precipitation
-                    </button>
+                    </h2>
+                    <div className="flex-col relative group">
+                        <button
+                            onClick={handleRainfallMapBtnClick}
+                            className={`flex px-4 py-2 my-2 rounded-full font-semibold transition-colors duration-300 ${
+                                isRainfallMapActive
+                                    ? "bg-blue-400 text-white"
+                                    : "bg-blue-200 hover:bg-blue-400 hover:text-white"
+                            }`}
+                        >
+                            All Rainfall Readings
+                        </button>
+
+                        <button
+                            onClick={handleRainfallAreasBtnClick}
+                            className={`flex px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
+                                isRainfallAreasActive
+                                    ? "bg-blue-400 text-white"
+                                    : "bg-blue-200 hover:bg-blue-400 hover:text-white"
+                            }`}
+                        >
+                            View only areas with rainfall
+                        </button>
+                    </div>
                 </div>
             </div>
 
