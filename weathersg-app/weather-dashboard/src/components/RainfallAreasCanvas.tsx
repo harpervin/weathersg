@@ -1,4 +1,4 @@
-import React, { useEffect, useRef } from "react";
+import React, { useEffect, useRef, useState } from "react";
 import { useMap } from "react-leaflet";
 
 type RainfallCanvasProps = {
@@ -15,6 +15,7 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
+    const [hasRainfall, setHasRainfall] = useState(false); // State to track rainfall
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -66,6 +67,7 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
             if (!hasRainfall) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
                 return; // Do not render if no station has rainfall > 0
+                setHasRainfall(hasRainfallData); // Update state
             }
 
             // Draw translucent blue overlay
@@ -144,18 +146,38 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
     }, [stations, map]);
 
     return (
-        <canvas
-            ref={canvasRef}
-            style={{
-                position: "absolute",
-                top: 0,
-                left: 0,
-                width: "100%",
-                height: "100%",
-                pointerEvents: "none",
-                zIndex: 10000, // Ensure it's above the map
-            }}
-        />
+        <div style={{ position: "relative" }}>
+            <canvas
+                ref={canvasRef}
+                style={{
+                    position: "absolute",
+                    top: 0,
+                    left: 0,
+                    width: "100%",
+                    height: "100%",
+                    pointerEvents: "none",
+                    zIndex: 10000, // Ensure it's above the map
+                }}
+            />
+            {!hasRainfall && (
+                <div
+                    style={{
+                        position: "absolute",
+                        top: "80px", // Adjust tooltip position
+                        left: "10px", // Adjust tooltip position
+                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        color: "white",
+                        padding: "8px 12px",
+                        borderRadius: "4px",
+                        zIndex: 10001, // Ensure it's above other elements
+                        fontSize: "14px",
+                        textAlign: "center",
+                    }}
+                >
+                    No rainfall detected at any station.
+                </div>
+            )}
+        </div>
     );
 };
 
