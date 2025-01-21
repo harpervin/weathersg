@@ -125,5 +125,5 @@ def plotTemperatureByYear(year, output_file):
 
 if __name__ == '__main__':  
     OUTPUT_FILE = "daily_average_temperature_data.json"
-    plotTemperatureByMonth(2024, 1, OUTPUT_FILE)
-    #plotTemperatureByYear(2024, OUTPUT_FILE)
+    #plotTemperatureByMonth(2024, 1, OUTPUT_FILE)
+    plotTemperatureByYear(2024, OUTPUT_FILE)
