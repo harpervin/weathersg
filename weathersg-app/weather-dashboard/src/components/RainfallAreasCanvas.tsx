@@ -60,14 +60,14 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
         };
 
         const drawOverlayAndRainfall = () => {
-            const hasRainfall = stations.some(
+            const rainfallDetected = stations.some(
                 (station) => station.rainfall > 0
             );
 
-            if (!hasRainfall) {
+            if (!rainfallDetected) {
                 ctx.clearRect(0, 0, canvas.width, canvas.height);
+                setHasRainfall(rainfallDetected); // Update state
                 return; // Do not render if no station has rainfall > 0
-                setHasRainfall(hasRainfallData); // Update state
             }
 
             // Draw translucent blue overlay
