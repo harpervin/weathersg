@@ -43,7 +43,7 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
 
         const updateRaindrops = () => {
             raindrops = raindrops.map((drop) => {
-                let newY = drop.y + drop.speed;
+                const newY = drop.y + drop.speed;
                 if (newY > canvas.height) {
                     // Reset raindrop to the top
                     return {
