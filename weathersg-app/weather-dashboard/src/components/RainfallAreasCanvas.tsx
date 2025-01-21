@@ -10,12 +10,10 @@ type RainfallCanvasProps = {
     }[];
 };
 
-const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
-    stations,
-}) => {
+const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
-    const [hasRainfall, setHasRainfall] = useState(false); // State to track rainfall
+    const [showTooltip, setShowTooltip] = useState(false); // State to manage tooltip visibility
 
     useEffect(() => {
         const canvas = canvasRef.current!;
@@ -44,7 +42,7 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
 
         const updateRaindrops = () => {
             raindrops = raindrops.map((drop) => {
-                const newY = drop.y + drop.speed;
+                let newY = drop.y + drop.speed;
                 if (newY > canvas.height) {
                     // Reset raindrop to the top
                     return {
@@ -60,16 +58,6 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
         };
 
         const drawOverlayAndRainfall = () => {
-            const rainfallDetected = stations.some(
-                (station) => station.rainfall > 0
-            );
-
-            if (!rainfallDetected) {
-                ctx.clearRect(0, 0, canvas.width, canvas.height);
-                setHasRainfall(rainfallDetected); // Update state
-                return; // Do not render if no station has rainfall > 0
-            }
-
             // Draw translucent blue overlay
             ctx.fillStyle = "rgba(0, 0, 255, 0.03)";
             ctx.fillRect(0, 0, canvas.width, canvas.height);
@@ -131,9 +119,18 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
 
         // Animation loop
         const animate = () => {
+            const hasRainfall = stations.some((station) => station.rainfall > 0);
+
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear the canvas
-            drawOverlayAndRainfall();
-            updateRaindrops();
+
+            if (hasRainfall) {
+                setShowTooltip(false); // Hide tooltip
+                drawOverlayAndRainfall();
+                updateRaindrops();
+            } else {
+                setShowTooltip(true); // Show tooltip
+            }
+
             requestAnimationFrame(animate);
         };
 
@@ -146,7 +143,7 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
     }, [stations, map]);
 
     return (
-        <div style={{ position: "relative" }}>
+        <>
             <canvas
                 ref={canvasRef}
                 style={{
@@ -159,26 +156,27 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
                     zIndex: 10000, // Ensure it's above the map
                 }}
             />
-            {!hasRainfall && (
+            {showTooltip && (
                 <div
                     style={{
                         position: "absolute",
-                        top: "80px", // Adjust tooltip position
-                        left: "10px", // Adjust tooltip position
-                        backgroundColor: "rgba(0, 0, 0, 0.7)",
+                        top: "10px",
+                        left: "50%",
+                        transform: "translateX(-50%)",
+                        backgroundColor: "rgba(0, 0, 0, 0.8)",
                         color: "white",
                         padding: "8px 12px",
                         borderRadius: "4px",
-                        zIndex: 10001, // Ensure it's above other elements
+                        zIndex: 10001,
+                        pointerEvents: "none",
                         fontSize: "14px",
-                        textAlign: "center",
                     }}
                 >
-                    No rainfall detected at any station.
+                    No rainfall received at any station
                 </div>
             )}
-        </div>
+        </>
     );
 };
 
-export default RainfallReadingsCanvas;
+export default RainfallAreasCanvas;

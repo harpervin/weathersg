@@ -99,7 +99,7 @@ if __name__ == "__main__":
     # 4.1) Pick your date range
     # Here we do a full year's example, but the same logic
     # works for 1 day, 1 month, etc. Just choose start/end dates accordingly.
-    year = 2024
+    year = 2023
     start_date = datetime(year, 1, 1)
     end_date = datetime(year, 12, 31)
     day_delta = timedelta(days=1)

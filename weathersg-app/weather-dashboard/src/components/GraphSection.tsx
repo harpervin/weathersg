@@ -7,7 +7,7 @@ type GraphSectionProps = {
 
 const GraphSection: React.FC<GraphSectionProps> = ({ graphConfig }) => {
   return (
-    <div className="w-1/2 pl-4">
+    <div className="pl-4">
       <h2 className="text-lg font-semibold mb-4">Graph</h2>
       <Bar
         data={{

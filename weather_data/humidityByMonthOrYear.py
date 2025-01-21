@@ -135,5 +135,5 @@ def plotHumidityByYear(year, output_file):
 if __name__ == '__main__':
     OUTPUT_FILE = "daily_average_humidity_data.json"
     # plotHumidityByMonth(2023, 1, OUTPUT_FILE)
-    plotHumidityByYear(2022, OUTPUT_FILE)
+    plotHumidityByYear(2023, OUTPUT_FILE)
  

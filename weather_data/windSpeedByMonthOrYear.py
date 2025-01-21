@@ -115,7 +115,7 @@ if __name__ == "__main__":
     plotweatherByYear(
         title="Average Wind Speeds",
         measurement="knots",
-        year=2024,
+        year=2023,
         output_file="daily_average_windspeed_data.json",
         weather_type="wind-speed",
         data_format="average",

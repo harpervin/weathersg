@@ -136,7 +136,7 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
                     position={[1.3521, 103.8198]} // Singapore's coordinates
                     text="Singapore"
                     style={{
-                        fontSize: "15px",
+                        fontSize: "21px",
                         fontWeight: "bold",
                         color: "white",
                         textShadow: "1px 1px 2px black",
