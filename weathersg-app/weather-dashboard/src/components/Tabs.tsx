@@ -1,11 +1,10 @@
 import React from "react";
 
-type WeatherTab = "Rainfall" | "Wind Speed" | "Air Temperature" | "Humidity";
 
 type TabsProps = {
-    tabs: WeatherTab[]; // Use WeatherTab[] for the tabs array
-    activeTab: WeatherTab; // Ensure activeTab is of type WeatherTab
-    setActiveTab: React.Dispatch<React.SetStateAction<WeatherTab>>; // Correct type for the setter
+    tabs: string[]; // Use WeatherTab[] for the tabs array
+    activeTab: string; // Ensure activeTab is of type WeatherTab
+    setActiveTab: React.Dispatch<React.SetStateAction<string>>; // Correct type for the setter
   };
 
 const Tabs: React.FC<TabsProps> = ({ tabs, activeTab, setActiveTab }) => {

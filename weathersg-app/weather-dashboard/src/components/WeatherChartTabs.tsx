@@ -10,10 +10,9 @@ import DatePicker from "./DatePicker";
 import DurationCheckboxes from "./DurationCheckboxes";
 import GraphSection from "./GraphSection";
 
-type WeatherTab = "Rainfall" | "Wind Speed" | "Air Temperature" | "Humidity";
 
 const WeatherChartTabs: React.FC = () => {
-    const [activeTab, setActiveTab] = useState<WeatherTab>("Rainfall");
+    const [activeTab, setActiveTab] = useState<string>("Rainfall");
     const [duration, setDuration] = useState("Hourly");
     const [showGraph, setShowGraph] = useState(false);
     const [rainWindOption, setRainWindOption] = useState<string | null>(null);
@@ -34,14 +33,14 @@ const WeatherChartTabs: React.FC = () => {
         "Monthly",
         "Yearly",
     ];
-    const tabs: WeatherTab[] = [
+    const tabs: string[] = [
         "Rainfall",
         "Wind Speed",
         "Air Temperature",
         "Humidity",
     ];
 
-    const data: Record<WeatherTab, number[]> = {
+    const data: Record<string, number[]> = {
         Rainfall: [10, 20, 30, 40],
         "Wind Speed": [5, 15, 25, 35],
         "Air Temperature": [25, 26, 27, 28],

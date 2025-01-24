@@ -16,6 +16,8 @@ const WindstreamCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
     const map = useMap();
 
     useEffect(() => {
+        if (stations.length === 0) return;
+
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d")!;
 
@@ -141,12 +143,12 @@ const WindstreamCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
         const drawParticles = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear entire canvas
             particles.forEach((particle) => {
-              ctx.beginPath();
-              ctx.arc(particle.x, particle.y, 2, 0, 2 * Math.PI);
-              ctx.fillStyle = "rgba(0, 150, 255, 0.7)";
-              ctx.fill();
+                ctx.beginPath();
+                ctx.arc(particle.x, particle.y, 2, 0, 2 * Math.PI);
+                ctx.fillStyle = "rgba(0, 150, 255, 0.7)";
+                ctx.fill();
             });
-          };
+        };
 
         // Animation loop
         const animate = () => {

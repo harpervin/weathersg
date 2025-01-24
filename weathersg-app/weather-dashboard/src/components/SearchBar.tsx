@@ -63,7 +63,7 @@ export default function SearchBar({ query, setQuery }: SearchBarProps) {
     };
 
     return (
-        <div className="relative">
+        <div className="relative w-full lg:w-auto mt-4 lg:mt-0">
             <form onSubmit={handleSearchSubmit} className="flex items-center space-x-2">
                 <input
                     type="text"
