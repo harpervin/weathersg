@@ -3,10 +3,8 @@ import dynamic from "next/dynamic";
 import { useState } from "react";
 
 import CheckboxGroup from "@/components/CheckboxGroup";
-import WeatherChartTabs from "@/components/WeatherChartTabs";
 import SearchBar from "@/components/SearchBar";
 import Tabs from "@/components/Tabs";
-import HistoricalWeatherMap from "@/components/HistoricalWeatherMap";
 
 const RealtimeWeatherMap = dynamic(
     () => import("../components/RealtimeWeatherMap"),
@@ -75,9 +73,6 @@ export default function Page() {
                     />
                     {activeTab == "Realtime Weather Map" && (
                         <RealtimeWeatherMap selectedLayers={selectedLayers} />
-                    )}
-                    {activeTab == "Historical Weather Map" && (
-                        <HistoricalWeatherMap selectedLayers={selectedLayers} />
                     )}
                 </div>
 

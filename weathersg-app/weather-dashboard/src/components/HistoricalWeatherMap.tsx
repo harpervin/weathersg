@@ -54,7 +54,7 @@ const CenterButton: React.FC = () => {
     );
 };
 
-const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
+const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
     const [stations, setStations] = useState<StationData[]>([]);
     const [temperatures, setTemperatures] = useState<StationTemperatureData[]>(
         []
@@ -62,12 +62,38 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers })
     const [humidity, setHumidity] = useState<StationHumidityData[]>([]);
     const [rainfall, seRainfall] = useState<StationRainfallData[]>([]);
 
+    useEffect(() => {
+        const loadWeatherData = async () => {
+            const data = await fetchWindData();
+            setStations(data);
+
+            const tempData = await fetchTemperatureData();
+            setTemperatures(tempData);
+
+            const humidityData = await fetchHumidityData();
+            setHumidity(humidityData);
+
+            const rainfallData = await fetchRainfallData();
+            seRainfall(rainfallData);
+        };
+
+        // Initial load
+        loadWeatherData();
+
+        // Set up periodic fetching
+        const interval = setInterval(() => {
+            loadWeatherData();
+        }, 60000); // Fetch every 60 seconds
+
+        // Cleanup interval on component unmount
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div style={{ height: "80vh", width: "100%", position: "relative" }}>
             <MapContainer
                 center={[1.3521, 103.8198]}
                 zoom={12}
-                minZoom={12}
                 scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
             >
@@ -75,8 +101,8 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers })
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-
-                {/* {selectedLayers.includes("Windstream") &&
+                
+                {selectedLayers.includes("Windstream") &&
                     stations.length > 0 && (
                         <WindstreamCanvas stations={stations} />
                     )}
@@ -92,17 +118,19 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers })
                     temperatures.length > 0 && (
                         <AirTemperatureCanvas stations={temperatures} />
                     )}
-                {selectedLayers.includes("Humidity") && humidity.length > 0 && (
-                    <HumidityCanvas stations={humidity} />
-                )}
+                {selectedLayers.includes("Humidity") &&
+                    humidity.length > 0 && (
+                        <HumidityCanvas stations={humidity} />
+                    )}
                 {selectedLayers.includes("AllRainfallReadings") &&
                     rainfall.length > 0 && (
                         <RainfallReadingsCanvas stations={rainfall} />
                     )}
                 {selectedLayers.includes("RainfallAreas") &&
                     rainfall.length > 0 && (
-                        <RainfallAreasCanvas stations={rainfall} />
-                    )} */}
+                        <                RainfallAreasCanvas
+                        stations={rainfall} />
+                    )}
                 {/* Add the Singapore text overlay */}
                 <MapTextOverlay
                     position={[1.3521, 103.8198]} // Singapore's coordinates
@@ -122,4 +150,4 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers })
     );
 };
 
-export default HistoricalWeatherMap;
+export default MapWithWind;
