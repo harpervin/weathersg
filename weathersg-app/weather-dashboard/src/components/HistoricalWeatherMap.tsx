@@ -11,6 +11,7 @@ import HumidityCanvas from "./HumidityCanvas";
 import RainfallReadingsCanvas from "./RainfallReadingsCanvas";
 import RainfallAreasCanvas from "./RainfallAreasCanvas";
 import MapTextOverlay from "./MapTextOverlay";
+import useScreenSize from "@/hooks/useScreenSize";
 
 import { fetchWindData, StationData } from "../utils/windData";
 import { fetchHumidityData, StationHumidityData } from "@/utils/humidityData";
@@ -54,13 +55,16 @@ const CenterButton: React.FC = () => {
     );
 };
 
-const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
+const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
     const [stations, setStations] = useState<StationData[]>([]);
     const [temperatures, setTemperatures] = useState<StationTemperatureData[]>(
         []
     );
     const [humidity, setHumidity] = useState<StationHumidityData[]>([]);
     const [rainfall, seRainfall] = useState<StationRainfallData[]>([]);
+    
+    const isSmallScreen = useScreenSize();
+    const zoomLevel = isSmallScreen ? 10 : 11;
 
     useEffect(() => {
         const loadWeatherData = async () => {
@@ -93,7 +97,8 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
         <div style={{ height: "80vh", width: "100%", position: "relative" }}>
             <MapContainer
                 center={[1.3521, 103.8198]}
-                zoom={12}
+                zoom={zoomLevel}
+                minZoom={zoomLevel}
                 scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
             >
@@ -150,4 +155,4 @@ const MapWithWind: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
     );
 };
 
-export default MapWithWind;
+export default HistoricalWeatherMap;

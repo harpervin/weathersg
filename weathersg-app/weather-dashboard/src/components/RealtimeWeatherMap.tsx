@@ -65,7 +65,7 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
     const [humidity, setHumidity] = useState<StationHumidityData[]>([]);
     const [rainfall, seRainfall] = useState<StationRainfallData[]>([]);
     const isSmallScreen = useScreenSize();
-    const zoomLevel = isSmallScreen ? 11 : 12;
+    const zoomLevel = isSmallScreen ? 10 : 11;
 
     useEffect(() => {
         const loadWeatherData = async () => {
@@ -100,7 +100,7 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
                 center={[1.3521, 103.8198]}
                 zoom={zoomLevel}
                 minZoom={zoomLevel}
-                scrollWheelZoom={true}
+                scrollWheelZoom={false}
                 style={{ height: "100%", width: "100%" }}
             >
                 <TileLayer

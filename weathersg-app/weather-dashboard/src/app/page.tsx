@@ -5,6 +5,7 @@ import { useState } from "react";
 import CheckboxGroup from "@/components/CheckboxGroup";
 import SearchBar from "@/components/SearchBar";
 import Tabs from "@/components/Tabs";
+import DatetimeSlider from "@/components/DatetimeSlider";
 
 const RealtimeWeatherMap = dynamic(
     () => import("../components/RealtimeWeatherMap"),
@@ -61,9 +62,8 @@ export default function Page() {
                 </h1>
                 <SearchBar query={searchQuery} setQuery={setSearchQuery} />
             </div>
-            <hr />
 
-            {/* Map and Checkbox Section */}
+            {/* Time Slider */}
             <div className="flex flex-col lg:flex-row">
                 <div className="flex-1">
                     <Tabs
@@ -71,9 +71,15 @@ export default function Page() {
                         activeTab={activeTab}
                         setActiveTab={setActiveTab}
                     />
+
+                    {activeTab == "Historical Weather Map" && (
+                        <DatetimeSlider />
+                    )}
+
                     {activeTab == "Realtime Weather Map" && (
                         <RealtimeWeatherMap selectedLayers={selectedLayers} />
                     )}
+                    
                 </div>
 
                 <div className="p-4 bg-gray-100 rounded shadow-lg mt-4 lg:mt-0 lg:ml-4">
