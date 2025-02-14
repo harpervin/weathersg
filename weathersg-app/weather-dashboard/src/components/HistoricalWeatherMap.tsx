@@ -69,6 +69,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers })
     useEffect(() => {
         const loadWeatherData = async () => {
             const data = await fetchWindData();
+            
             setStations(data);
 
             const tempData = await fetchTemperatureData();

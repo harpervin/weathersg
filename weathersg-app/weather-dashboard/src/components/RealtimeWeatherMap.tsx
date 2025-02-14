@@ -70,6 +70,7 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
     useEffect(() => {
         const loadWeatherData = async () => {
             const data = await fetchWindData();
+            console.log(data);
             setStations(data);
 
             const tempData = await fetchTemperatureData();
