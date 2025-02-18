@@ -101,7 +101,7 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
                 center={[1.3521, 103.8198]}
                 zoom={zoomLevel}
                 minZoom={zoomLevel}
-                scrollWheelZoom={false}
+                scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
             >
                 <TileLayer

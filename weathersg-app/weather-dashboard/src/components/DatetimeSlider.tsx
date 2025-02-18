@@ -9,13 +9,18 @@ import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Slider from "@mui/material/Slider";
 
-const DatetimeSlider: React.FC = () => {
+interface DatetimeSliderProps {
+    onDataFetched: (data: any) => void; // Function to pass data to parent
+}
+
+const DatetimeSlider: React.FC<DatetimeSliderProps> = ({ onDataFetched }) => {
     // Readable start & end times
     const [readableStartTime, setReadableStartTime] = useState<string>("");
 
     // Start & end times in ISO format
     const [startTime, setStartTime] = useState<string>("");
     const [endTime, setEndTime] = useState<string>("");
+    const [selectedInterval, setSelectedInterval] = useState<String>("");
 
     // Maximum time range in minutes
     const [maxInterval, setMaxInterval] = useState<number>(24 * 60); // Default to 24 hours in minutes
@@ -45,12 +50,13 @@ const DatetimeSlider: React.FC = () => {
 
         setReadableStartTime(startDate.format("DD MMM YY, HH:mm"));
 
-        setStartTime(startDate.format("YYYY-MM-DDTHH:mm"));
-        setEndTime(endDate.format("YYYY-MM-DDTHH:mm"));
+        setStartTime(startDate.format("YYYY-MM-DD HH:mm"));
+        setEndTime(endDate.format("YYYY-MM-DD HH:mm"));
     }, []);
 
     useEffect(() => {
         if (startTime && endTime) {
+            console.log(startTime, endTime);
             const start = dayjs(startTime);
             const end = dayjs(endTime);
             const totalMinutes = end.diff(start, "minute");
@@ -89,10 +95,7 @@ const DatetimeSlider: React.FC = () => {
         setDisableMinutes(1 > totalMinutes); // 1 minute = 1 minute (always enabled)
     };
 
-    const handleSliderChange = (
-        event: Event,
-        value: number | number[],
-    ) => {
+    const handleSliderChange = (event: Event, value: number | number[]) => {
         if (typeof value === "number") {
             setSliderValue(value);
 
@@ -111,6 +114,36 @@ const DatetimeSlider: React.FC = () => {
         }
     };
 
+    const handleFetchData = async () => {
+        try {
+            console.log(startTime, endTime, selectedInterval);
+    
+            const paramString = tables.length ? tables.join(",") : "all"; // Convert array to a comma-separated string
+    
+            const response = await fetch(
+                `/api?startDate=${startTime}&endDate=${endTime}&interval=${selectedInterval}&param=${encodeURIComponent(paramString)}`
+            );
+    
+            if (!response.ok) throw new Error("Failed to fetch weather data");
+    
+            const data = await response.json();
+            onDataFetched(data);
+            console.log("fetched past data: ", data);
+        } catch (error) {
+            console.error("Error fetching weather data:", error);
+        }
+    };
+    
+
+    const tables = [
+        // "wind_speed",
+        // "wind_direction",
+        // "relative_humidity",
+        // "rainfall",
+        "air_temperature",
+        // "wind_combined",
+    ];
+
     return (
         <div className="p-4 bg-gray-100 rounded shadow-lg my-4">
             <Box>
@@ -126,7 +159,7 @@ const DatetimeSlider: React.FC = () => {
                             value={dayjs(startTime)}
                             onChange={(newValue) =>
                                 setStartTime(
-                                    newValue?.format("YYYY-MM-DDTHH:mm") || ""
+                                    newValue?.format("YYYY-MM-DD HH:mm") || ""
                                 )
                             }
                         />
@@ -138,7 +171,7 @@ const DatetimeSlider: React.FC = () => {
                             value={dayjs(endTime)}
                             onChange={(newValue) =>
                                 setEndTime(
-                                    newValue?.format("YYYY-MM-DDTHH:mm") || ""
+                                    newValue?.format("YYYY-MM-DD HH:mm") || ""
                                 )
                             }
                         />
@@ -162,6 +195,9 @@ const DatetimeSlider: React.FC = () => {
                             setSelectedDays(0);
                             setSelectedHours(0);
                             setSelectedMinutes(0);
+                            setSelectedInterval(
+                                String(e.target.value) + "year"
+                            );
                         }}
                         displayEmpty
                         disabled={disableYears}
@@ -180,6 +216,9 @@ const DatetimeSlider: React.FC = () => {
                             setSelectedDays(0);
                             setSelectedHours(0);
                             setSelectedMinutes(0);
+                            setSelectedInterval(
+                                String(e.target.value) + "month"
+                            );
                         }}
                         displayEmpty
                         disabled={disableMonths}
@@ -201,6 +240,7 @@ const DatetimeSlider: React.FC = () => {
                             setSelectedYears(0);
                             setSelectedHours(0);
                             setSelectedMinutes(0);
+                            setSelectedInterval(String(e.target.value) + "day");
                         }}
                         displayEmpty
                         disabled={disableDays}
@@ -225,6 +265,7 @@ const DatetimeSlider: React.FC = () => {
                             setSelectedMonths(0);
                             setSelectedYears(0);
                             setSelectedMinutes(0);
+                            setSelectedInterval(String(e.target.value) + "h");
                         }}
                         displayEmpty
                         disabled={disableHours}
@@ -258,9 +299,10 @@ const DatetimeSlider: React.FC = () => {
                             setSelectedDays(0);
                             setSelectedMonths(0);
                             setSelectedYears(0);
+                            setSelectedInterval(String(e.target.value) + "min");
                         }}
                         displayEmpty
-                        disabled={disableMinutes}   
+                        disabled={disableMinutes}
                     >
                         <MenuItem value={0}>0 Minutes</MenuItem>
                         <MenuItem value={1}>1 Minute</MenuItem>
@@ -274,9 +316,20 @@ const DatetimeSlider: React.FC = () => {
                 </Stack>
             </div>
 
+            <div className="my-4">
+                <button
+                    className="rounded-full bg-blue-200 p-2 h-12 text-black font-semibold hover:bg-blue-400 hover:text-white"
+                    onClick={handleFetchData}
+                >
+                    Play Animation
+                </button>
+            </div>
+
+            <hr />
+
             {/* Slider */}
             <div className="my-2">
-                <h2 className="font-bold">3. View weather at this time:</h2>
+                <h2 className="font-bold">View weather at this time:</h2>
                 <Slider
                     aria-label="Time Range"
                     value={sliderValue}
