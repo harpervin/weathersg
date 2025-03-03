@@ -16,10 +16,11 @@ import {
     getMultiDbHourlyIntervalQuery,
     getMultiDbDailyIntervalQuery,
     getMultiDbMonthlyIntervalQuery,
+    getMultiDbYearlyIntervalQuery,
     getMinutelyIntervalQuery,
     getHourlyIntervalQuery,
     getDailyIntervalQuery,
-    getMonthlyIntervalQuery
+    getMonthlyIntervalQuery,
 } from "@/utils/actual_data_queries"; // Import optimized queries
 
 import { Database } from "sqlite";
@@ -51,6 +52,8 @@ async function attachDatabases(db: Database, years: number[]) {
             "utils",
             `weather_${year}.db`
         );
+        console.log(`Attaching database: ${dbPath}`);
+
         await db.exec(`ATTACH DATABASE '${dbPath}' AS weather_${year}`);
     }
 }
@@ -79,7 +82,10 @@ async function getWeatherData(
     const db = await getDbConnection(mainDbPath);
 
     // Attach remaining databases
-    if (years.length > 1) await attachDatabases(db, years);
+    if (years.length > 1) {
+        console.log("attached databases");
+        await attachDatabases(db, years);
+    }
 
     console.log(
         `Querying data for interval: ${interval} from ${startDate} to ${endDate}`
@@ -87,7 +93,7 @@ async function getWeatherData(
 
     const intervalNum = parseInt(interval.substring(0, -1));
     const year = parseInt(startDate.substring(0, 4));
-    const month = startDate.substring(5, 7)
+    const month = startDate.substring(5, 7);
     const day = startDate.substring(8, 10);
     const hour = startDate.substring(11, 13);
     const minute = startDate.substring(14, 16);
@@ -98,8 +104,17 @@ async function getWeatherData(
             case "5min":
             case "15min":
                 return years.length > 1
-                    ? getMultiDbMinutelyIntervalQuery(years, param, parseInt(interval))
-                    : getMinutelyIntervalQuery(param, parseInt(interval), parseInt(minute));
+                    ? getMultiDbMinutelyIntervalQuery(
+                          years,
+                          param,
+                          parseInt(interval),
+                          minute
+                      )
+                    : getMinutelyIntervalQuery(
+                          param,
+                          parseInt(interval),
+                          minute
+                      );
             // return years.length > 1
             //     ? getMultiDbMinutelyAvgQuery(years, param, parseInt(interval))
             //     : getMinutelyAvgIntervalQuery(param, parseInt(interval));
@@ -110,45 +125,91 @@ async function getWeatherData(
             case "6h":
             case "12h":
                 return years.length > 1
-                    ? getMultiDbHourlyIntervalQuery(years, param, parseInt(interval), minute)
-                    : getHourlyIntervalQuery(
+                    ? getMultiDbHourlyIntervalQuery(
+                          years,
                           param,
                           parseInt(interval),
+                          hour,
                           minute
-                      );
+                      )
+                    : getHourlyIntervalQuery(param, parseInt(interval), hour, minute);
             // return years.length > 1
             //     ? getMultiDbHourlyAvgQuery(years, param, parseInt(interval))
             //     : getHourlyAvgIntervalQuery(param, parseInt(interval));
             case "1day":
             case "7day":
                 return years.length > 1
-                    ? getMultiDbDailyIntervalQuery(years, param, parseInt(interval), hour, minute)
-                    : getDailyIntervalQuery(param, parseInt(interval), "01", "00");
+                    ? getMultiDbDailyIntervalQuery(
+                          years,
+                          param,
+                          parseInt(interval),
+                          startDate,
+                          hour,
+                          minute
+                      )
+                    : getDailyIntervalQuery(
+                          param,
+                          parseInt(interval),
+                          startDate,
+                          hour,
+                          minute
+                      );
             // return getMultiDbDailyAvgQuery(years, param, "01", "00");
             case "1month":
             case "6month":
                 return years.length > 1
-                    ? getMultiDbMonthlyIntervalQuery(years, param, parseInt(interval), day, hour, minute)
-                    : getMonthlyIntervalQuery(param, parseInt(interval), day, hour, minute);
-            // return getMultiDbMonthlyAvgQuery(
-            //     years,
-            //     param,
-            //     "05",
-            //     "01",
-            //     "00"
-            // );
+                    ? getMultiDbMonthlyIntervalQuery(
+                          years,
+                          param,
+                          parseInt(interval),
+                          day,
+                          hour,
+                          minute,
+                          startDate
+                      )
+                    : getMonthlyIntervalQuery(
+                          param,
+                          parseInt(interval),
+                          day,
+                          hour,
+                          minute,
+                          startDate
+                      );
+            case "1year":
+                console.log(years);
+
+                return getMultiDbYearlyIntervalQuery(
+                    years,
+                    param,
+                    parseInt(interval),
+                    month,
+                    day,
+                    hour,
+                    minute
+                );
+
             default:
                 throw new Error("Invalid interval");
         }
     });
 
     // Run queries in parallel
+    // Run queries in parallel
     const queryResults = await Promise.all(
-        queryPromises.map((q) => db.all(q, [startDate, endDate]))
+        queryPromises.map(async (q) => {
+            console.log("Executing Query:", q); // Debugging
+
+            // Dynamically generate the correct number of parameters
+            const queryParams = years.flatMap(() => [startDate, endDate]);
+            console.log("Query Parameters:", queryParams);
+
+            const result = await db.all(q, queryParams);
+            console.log("Query Result:", result);
+            return result;
+        })
     );
 
     await db.close();
-
     return queryResults.flat(); // Merge results
 }
 

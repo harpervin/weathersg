@@ -180,7 +180,7 @@ def fetch_and_store_data():
     print("All weather data stored in SQLite.")
 
 MAX_THREADS = 10
-START_YEAR = 2023
-END_YEAR = 2023
+START_YEAR = 2021
+END_YEAR = 2021
 
 fetch_and_store_data()
