@@ -10,7 +10,7 @@ type RainfallCanvasProps = {
     }[];
 };
 
-const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
+const RealtimeRainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
     stations,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -156,4 +156,4 @@ const RainfallReadingsCanvas: React.FC<RainfallCanvasProps> = ({
     );
 };
 
-export default RainfallReadingsCanvas;
+export default RealtimeRainfallReadingsCanvas;

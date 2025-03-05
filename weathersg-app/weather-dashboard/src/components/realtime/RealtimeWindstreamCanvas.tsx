@@ -1,5 +1,5 @@
 import React, { useEffect, useRef } from "react";
-import { StationData } from "../utils/windData";
+import { StationData } from "../../utils/windData";
 import { useMap } from "react-leaflet";
 
 type WindCanvasProps = {
@@ -11,9 +11,13 @@ type NearestStationAccumulator = {
     distance: number;
 };
 
-const WindstreamCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
+const RealtimeWindstreamCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
+
+    useEffect(() => {
+        console.log(stations);
+    }, [stations]);
 
     useEffect(() => {
         if (stations.length === 0) return;
@@ -182,4 +186,4 @@ const WindstreamCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
     );
 };
 
-export default WindstreamCanvas;
+export default RealtimeWindstreamCanvas;

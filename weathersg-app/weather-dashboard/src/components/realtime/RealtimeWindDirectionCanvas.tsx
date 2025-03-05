@@ -1,12 +1,14 @@
 import React, { useEffect, useRef } from "react";
-import { StationHumidityData } from "../utils/humidityData";
+import { StationData } from "../../utils/windData";
 import { useMap } from "react-leaflet";
 
-type HumidityCanvasProps = {
-    stations: StationHumidityData[];
+type WindCanvasProps = {
+    stations: StationData[];
 };
 
-const HumidityCanvas: React.FC<HumidityCanvasProps> = ({ stations }) => {
+const RealtimeWindDirectionCanvas: React.FC<WindCanvasProps> = ({
+    stations,
+}) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
 
@@ -26,7 +28,7 @@ const HumidityCanvas: React.FC<HumidityCanvasProps> = ({ stations }) => {
         resizeCanvas(); // Initial resize
         map.on("resize", resizeCanvas); // Resize on map container changes
 
-        const drawTemperatures = () => {
+        const drawArrows = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height); // Clear entire canvas
 
             stations.forEach((station) => {
@@ -38,35 +40,50 @@ const HumidityCanvas: React.FC<HumidityCanvasProps> = ({ stations }) => {
                 const x = point.x;
                 const y = point.y;
 
-                // Draw circular background
-                const radius = 22; // Increase radius size for larger background
+                const radians = Math.atan2(station.u, station.v); // Calculate wind direction in radians
+                const length = 20; // Arrow length
+
+                // Draw arrow body
                 ctx.beginPath();
-                ctx.arc(x + 25, y - 60, radius, 0, 2 * Math.PI); // Adjusted y position
-                ctx.fillStyle = "rgba(82, 243, 235, 0.5)"; // Blue background
-                ctx.fill();
-                ctx.strokeStyle = "rgba(62, 210, 202, 1)"; // Blue border
+                ctx.moveTo(x, y);
+                ctx.lineTo(
+                    x + length * Math.sin(radians),
+                    y - length * Math.cos(radians)
+                );
+                ctx.strokeStyle = "rgba(0, 0, 0)";
                 ctx.lineWidth = 2;
                 ctx.stroke();
 
-                // Draw humidity text
-                ctx.font = "14px Arial"; // Slightly larger font
-                ctx.fillStyle = "black"; // Black text color
-                ctx.textAlign = "center";
-                ctx.textBaseline = "middle";
-                ctx.fillText(`${station.humidity.toFixed(1)}%`, x + 25, y - 60); // Render above wind speed
+                // Draw arrowhead
+                ctx.beginPath();
+                ctx.moveTo(
+                    x + length * Math.sin(radians),
+                    y - length * Math.cos(radians)
+                );
+                ctx.lineTo(
+                    x + (length - 5) * Math.sin(radians + Math.PI / 6),
+                    y - (length - 5) * Math.cos(radians + Math.PI / 6)
+                );
+                ctx.lineTo(
+                    x + (length - 5) * Math.sin(radians - Math.PI / 6),
+                    y - (length - 5) * Math.cos(radians - Math.PI / 6)
+                );
+                ctx.closePath();
+                ctx.fillStyle = "rgba(0, 0, 0)";
+                ctx.fill();
             });
         };
 
-        // Redraw temperatures on every map move or zoom
+        // Redraw arrows on every map move or zoom
         const onMapMoveOrZoom = () => {
-            drawTemperatures();
+            drawArrows();
         };
 
         map.on("move", onMapMoveOrZoom);
         map.on("zoom", onMapMoveOrZoom);
 
         // Initial draw
-        drawTemperatures();
+        drawArrows();
 
         // Cleanup on unmount
         return () => {
@@ -86,10 +103,10 @@ const HumidityCanvas: React.FC<HumidityCanvasProps> = ({ stations }) => {
                 width: "100%",
                 height: "100%",
                 pointerEvents: "none",
-                zIndex: 10001, // Ensure air temperature is rendered above wind speed
+                zIndex: 10000, // Ensure it's above the map
             }}
         />
     );
 };
 
-export default HumidityCanvas;
+export default RealtimeWindDirectionCanvas;

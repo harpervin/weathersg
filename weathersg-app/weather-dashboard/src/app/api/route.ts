@@ -58,6 +58,8 @@ async function attachDatabases(db: Database, years: number[]) {
     }
 }
 
+
+
 // Optimized Function to Query Weather Data
 async function getWeatherData(
     startDate: string,
@@ -83,7 +85,6 @@ async function getWeatherData(
 
     // Attach remaining databases
     if (years.length > 1) {
-        console.log("attached databases");
         await attachDatabases(db, years);
     }
 
@@ -115,9 +116,6 @@ async function getWeatherData(
                           parseInt(interval),
                           minute
                       );
-            // return years.length > 1
-            //     ? getMultiDbMinutelyAvgQuery(years, param, parseInt(interval))
-            //     : getMinutelyAvgIntervalQuery(param, parseInt(interval));
             case "1h":
             case "2h":
             case "3h":
@@ -133,9 +131,7 @@ async function getWeatherData(
                           minute
                       )
                     : getHourlyIntervalQuery(param, parseInt(interval), hour, minute);
-            // return years.length > 1
-            //     ? getMultiDbHourlyAvgQuery(years, param, parseInt(interval))
-            //     : getHourlyAvgIntervalQuery(param, parseInt(interval));
+
             case "1day":
             case "7day":
                 return years.length > 1
@@ -154,7 +150,6 @@ async function getWeatherData(
                           hour,
                           minute
                       );
-            // return getMultiDbDailyAvgQuery(years, param, "01", "00");
             case "1month":
             case "6month":
                 return years.length > 1
@@ -176,7 +171,6 @@ async function getWeatherData(
                           startDate
                       );
             case "1year":
-                console.log(years);
 
                 return getMultiDbYearlyIntervalQuery(
                     years,
@@ -197,14 +191,14 @@ async function getWeatherData(
     // Run queries in parallel
     const queryResults = await Promise.all(
         queryPromises.map(async (q) => {
-            console.log("Executing Query:", q); // Debugging
+            // console.log("Executing Query:", q); // Debugging
 
             // Dynamically generate the correct number of parameters
             const queryParams = years.flatMap(() => [startDate, endDate]);
-            console.log("Query Parameters:", queryParams);
+            // console.log("Query Parameters:", queryParams);
 
             const result = await db.all(q, queryParams);
-            console.log("Query Result:", result);
+            // console.log("Query Result:", result);
             return result;
         })
     );

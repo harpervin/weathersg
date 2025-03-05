@@ -14,7 +14,6 @@ export const fetchHumidityData = async (): Promise<StationHumidityData[]> => {
         "https://api-open.data.gov.sg/v2/real-time/api/relative-humidity"
     );
     const humidityData = await humidityResponse.json();
-    // console.log(`Wind Speed API: ${windSpeedData.data.stations.length} stations, ${windSpeedData.data.readings[0].data.length} readings`);
 
     const stations = humidityData.data.stations.map((station: Station) => {
         const humidityReading = humidityData.data.readings[0].data.find(

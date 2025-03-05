@@ -1,5 +1,4 @@
 export const getMinutelyAvgIntervalQuery = (table: string, interval: number) => {
-    console.log("single db")
     return `SELECT 
         date, 
         strftime('%Y-%m-%d %H:%M:00', timestamp, '-' || (strftime('%M', timestamp) % ${interval}) || ' minutes') AS interval_start, 

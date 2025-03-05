@@ -17,14 +17,12 @@ export const fetchWindData = async (): Promise<StationData[]> => {
         "https://api-open.data.gov.sg/v2/real-time/api/wind-speed"
     );
     const windSpeedData = await windSpeedResponse.json();
-    // console.log(`Wind Speed API: ${windSpeedData.data.stations.length} stations, ${windSpeedData.data.readings[0].data.length} readings`);
 
     // Fetch wind direction data
     const windDirectionResponse = await fetch(
         "https://api-open.data.gov.sg/v2/real-time/api/wind-direction"
     );
     const windDirectionData = await windDirectionResponse.json();
-    // console.log(`Wind Direction API: ${windDirectionData.data.stations.length} stations, ${windDirectionData.data.readings[0].data.length} readings`);
 
     // Combine wind speed and direction data
     const stations = windSpeedData.data.stations.map((station: Station) => {

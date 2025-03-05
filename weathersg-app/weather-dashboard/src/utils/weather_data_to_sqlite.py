@@ -95,9 +95,9 @@ def store_weather_data_sqlite(year, param, date, readings):
         CREATE TABLE IF NOT EXISTS {param} (
             date TEXT,
             timestamp TEXT, -- Stored in 'YYYY-MM-DD HH:MM:SS' format
-            station_id TEXT,
+            stationId TEXT,
             value REAL,
-            PRIMARY KEY (date, timestamp, station_id)
+            PRIMARY KEY (date, timestamp, stationId)
         )
     """)
 
@@ -120,12 +120,12 @@ def store_wind_combined_data(year, date, wind_speed_readings, wind_direction_rea
         CREATE TABLE IF NOT EXISTS wind_combined (
             date DATE,
             timestamp DATETIME, -- Stored in 'YYYY-MM-DD HH:MM:SS' format
-            station_id TEXT,
+            stationId TEXT,
             speed REAL,
             direction REAL,
             u REAL,
             v REAL,
-            PRIMARY KEY (date, timestamp, station_id)
+            PRIMARY KEY (date, timestamp, stationId)
         )
     """)
 

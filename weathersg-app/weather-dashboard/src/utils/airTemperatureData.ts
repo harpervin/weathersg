@@ -16,7 +16,6 @@ export const fetchTemperatureData = async (): Promise<
         "https://api-open.data.gov.sg/v2/real-time/api/air-temperature"
     );
     const airTemperatureData = await airTemperatureResponse.json();
-    // console.log(`Wind Speed API: ${windSpeedData.data.stations.length} stations, ${windSpeedData.data.readings[0].data.length} readings`);
 
     const stations = airTemperatureData.data.stations.map(
         (station: Station) => {

@@ -5,7 +5,7 @@ import { useEffect, useState } from "react";
 import CheckboxGroup from "@/components/CheckboxGroup";
 import SearchBar from "@/components/SearchBar";
 import Tabs from "@/components/Tabs";
-import DatetimeSlider from "@/components/DatetimeSlider";
+import HistoricalWeatherMap from "@/components/HistoricalWeatherMap";
 
 const RealtimeWeatherMap = dynamic(
     () => import("../components/RealtimeWeatherMap"),
@@ -22,11 +22,6 @@ export default function Page() {
     const [isRainfallMapActive, setIsRainfallMapActive] = useState(false);
     const [isRainfallAreasActive, setIsRainfallAreasActive] = useState(false);
     const [searchQuery, setSearchQuery] = useState("");
-    const [historicalData, setHistoricalData] = useState<any>(null);
-
-    useEffect(() => {
-        console.log("fetched past data: ", historicalData);
-    }, [historicalData]);
 
     const handleCheckboxChange = (checkedValues: string[]) => {
         if (isRainfallMapActive || isRainfallAreasActive) {
@@ -78,7 +73,12 @@ export default function Page() {
                     />
 
                     {activeTab == "Historical Weather Map" && (
-                        <DatetimeSlider onDataFetched={setHistoricalData} />
+                        <>
+                            <HistoricalWeatherMap
+                                selectedLayers={selectedLayers}
+                                
+                            />
+                        </>
                     )}
 
                     {activeTab == "Realtime Weather Map" && (

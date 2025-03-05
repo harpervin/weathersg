@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { StationTemperatureData } from "../utils/airTemperatureData";
+import { StationTemperatureData } from "../../utils/airTemperatureData";
 import { useMap } from "react-leaflet";
 
 type AirTemperatureCanvasProps = {
     stations: StationTemperatureData[];
 };
 
-const AirTemperatureCanvas: React.FC<AirTemperatureCanvasProps> = ({
+const RealtimeAirTemperatureCanvas: React.FC<AirTemperatureCanvasProps> = ({
     stations,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
@@ -98,4 +98,4 @@ const AirTemperatureCanvas: React.FC<AirTemperatureCanvasProps> = ({
     );
 };
 
-export default AirTemperatureCanvas;
+export default RealtimeAirTemperatureCanvas;

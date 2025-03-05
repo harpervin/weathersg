@@ -8,12 +8,31 @@ import Box from "@mui/material/Box";
 import MenuItem from "@mui/material/MenuItem";
 import Select from "@mui/material/Select";
 import Slider from "@mui/material/Slider";
+import { StationData } from "../utils/windData";
+import { StationHumidityData } from "@/utils/humidityData";
+import { StationTemperatureData } from "@/utils/airTemperatureData";
+import { StationRainfallData } from "@/utils/rainfallData";
+import { HistoricalWindData } from "@/utils/historicalWeatherData";
+type MapWithWeatherProps = {
+    selectedLayers: string[]; // Prop to control wind stream visibility
+};
 
-interface DatetimeSliderProps {
-    onDataFetched: (data: any) => void; // Function to pass data to parent
-}
+const DatetimeSlider: React.FC<{
+    selectedLayers: string[];
+    onDataUpdate: (data: {
+        windData: HistoricalWindData[];
+        temperatureData: StationTemperatureData[];
+        humidityData: StationHumidityData[];
+        rainfallData: StationRainfallData[];
+    }) => void;
+}> = ({ selectedLayers, onDataUpdate }) => {
+    const [windData, setWindData] = useState<StationData[]>([]);
+    const [temperatureData, setTemperatureData] = useState<
+        StationTemperatureData[]
+    >([]);
+    const [humidityData, setHumidityData] = useState<StationHumidityData[]>([]);
+    const [rainfallData, setRainfallData] = useState<StationRainfallData[]>([]);
 
-const DatetimeSlider: React.FC<DatetimeSliderProps> = ({ onDataFetched }) => {
     // Readable start & end times
     const [readableStartTime, setReadableStartTime] = useState<string>("");
 
@@ -43,6 +62,23 @@ const DatetimeSlider: React.FC<DatetimeSliderProps> = ({ onDataFetched }) => {
     const [sliderMax, setSliderMax] = useState<number>(1440); // Max steps in slider
     const [sliderValue, setSliderValue] = useState<number>(0);
 
+    const [tablesToQuery, setTablesToQuery] = useState<string[]>([]);
+
+    const tableMap: Record<string, string> = {
+        Windstream: "wind_combined",
+        "Wind Direction": "wind_combined",
+        "Wind Speed": "wind_combined",
+        "Air Temperature": "air_temperature",
+        Humidity: "relative_humidity",
+    };
+
+    useEffect(() => {
+        const mappedTables = [
+            ...new Set(selectedLayers.map((prop) => tableMap[prop])),
+        ];
+        setTablesToQuery(mappedTables);
+    }, [selectedLayers]);
+
     useEffect(() => {
         const today = dayjs();
         const startDate = today.startOf("day");
@@ -56,7 +92,6 @@ const DatetimeSlider: React.FC<DatetimeSliderProps> = ({ onDataFetched }) => {
 
     useEffect(() => {
         if (startTime && endTime) {
-            console.log(startTime, endTime);
             const start = dayjs(startTime);
             const end = dayjs(endTime);
             const totalMinutes = end.diff(start, "minute");
@@ -115,34 +150,64 @@ const DatetimeSlider: React.FC<DatetimeSliderProps> = ({ onDataFetched }) => {
     };
 
     const handleFetchData = async () => {
+        console.log("Tables to Query:", tablesToQuery);
+        if (tablesToQuery.length === 0) {
+            console.log("No tables selected, skipping API call.");
+            return null; // Exit early
+        }
+    
+        console.log("Selected Interval:", selectedInterval);
+        if (!selectedInterval || String(selectedInterval).startsWith("0")) {
+            console.log("No interval selected, skipping API call.");
+            return null; // Exit early
+        }
+    
         try {
-            console.log(startTime, endTime, selectedInterval);
+            console.log("Fetching data for tables:", tablesToQuery);
     
-            const paramString = tables.length ? tables.join(",") : "all"; // Convert array to a comma-separated string
+            // Send multiple API requests in parallel
+            const responses = await Promise.all(
+                tablesToQuery.map(async (table) => {
+                    const queryParams = new URLSearchParams({
+                        startDate: startTime,
+                        endDate: endTime,
+                        interval: String(selectedInterval),
+                        param: table,
+                    });
     
-            const response = await fetch(
-                `/api?startDate=${startTime}&endDate=${endTime}&interval=${selectedInterval}&param=${encodeURIComponent(paramString)}`
+                    const response = await fetch(`/api?${queryParams.toString()}`);
+    
+                    if (!response.ok) throw new Error(`Failed to fetch data from ${table}`);
+    
+                    return { table, data: await response.json() };
+                })
             );
     
-            if (!response.ok) throw new Error("Failed to fetch weather data");
+            // Organize data by table
+            const weatherData = {
+                windData:
+                    responses.find((res) => res.table === "wind_combined")?.data || [],
+                temperatureData:
+                    responses.find((res) => res.table === "air_temperature")?.data || [],
+                humidityData:
+                    responses.find((res) => res.table === "relative_humidity")?.data || [],
+                rainfallData:
+                    responses.find((res) => res.table === "rainfall")?.data || [],
+            };
     
-            const data = await response.json();
-            onDataFetched(data);
-            console.log("fetched past data: ", data);
+            console.log("Fetched Weather Data:", weatherData);
+    
+            // ✅ Pass the data to parent component
+            onDataUpdate(weatherData);
+    
+            return weatherData; // Return structured weather data
+    
         } catch (error) {
             console.error("Error fetching weather data:", error);
+            return null; // Return null on failure
         }
     };
     
-
-    const tables = [
-        // "wind_speed",
-        // "wind_direction",
-        // "relative_humidity",
-        // "rainfall",
-        "air_temperature",
-        // "wind_combined",
-    ];
 
     return (
         <div className="p-4 bg-gray-100 rounded shadow-lg my-4">

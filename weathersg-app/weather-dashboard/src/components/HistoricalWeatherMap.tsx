@@ -3,23 +3,25 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import WindstreamCanvas from "./WindstreamCanvas";
-import WindDirectionCanvas from "./WindDirectionCanvas";
-import WindSpeedCanvas from "./WindSpeedCanvas";
-import AirTemperatureCanvas from "./AirTemperatureCanvas";
-import HumidityCanvas from "./HumidityCanvas";
-import RainfallReadingsCanvas from "./RainfallReadingsCanvas";
-import RainfallAreasCanvas from "./RainfallAreasCanvas";
+import HistoricalWindstreamCanvas from "./historical/HistoricalWindstreamCanvas";
+import RealtimeWindDirectionCanvas from "./realtime/RealtimeWindDirectionCanvas";
+import RealtimeWindSpeedCanvas from "./realtime/RealtimeWindSpeedCanvas";
+import RealtimeAirTemperatureCanvas from "./realtime/RealtimeAirTemperatureCanvas";
+import RealtimeHumidityCanvas from "./realtime/RealtimeHumidityCanvas";
+import RealtimeRainfallReadingsCanvas from "./realtime/RealtimeRainfallReadingsCanvas";
+import RealtimeRainfallAreasCanvas from "./realtime/RealtimeRainfallAreasCanvas";
 import MapTextOverlay from "./MapTextOverlay";
 import useScreenSize from "@/hooks/useScreenSize";
+import DatetimeSlider from "@/components/DatetimeSlider";
 
-import { fetchWindData, StationData } from "../utils/windData";
-import { fetchHumidityData, StationHumidityData } from "@/utils/humidityData";
-import {
-    fetchTemperatureData,
-    StationTemperatureData,
-} from "@/utils/airTemperatureData";
-import { fetchRainfallData, StationRainfallData } from "@/utils/rainfallData";
+
+import { HistoricalWindData } from "../utils/historicalWeatherData";
+import { StationHumidityData } from "@/utils/humidityData";
+import { StationTemperatureData } from "@/utils/airTemperatureData";
+import { StationRainfallData } from "@/utils/rainfallData";
+
+import windStations from "../utils/wind_stations.json";
+import rainfallStations from "../utils/rainfall_stations.json";
 
 type MapWithWeatherProps = {
     selectedLayers: string[]; // Prop to control wind stream visibility
@@ -55,47 +57,72 @@ const CenterButton: React.FC = () => {
     );
 };
 
-const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers }) => {
-    const [stations, setStations] = useState<StationData[]>([]);
-    const [temperatures, setTemperatures] = useState<StationTemperatureData[]>(
-        []
-    );
-    const [humidity, setHumidity] = useState<StationHumidityData[]>([]);
-    const [rainfall, seRainfall] = useState<StationRainfallData[]>([]);
-    
+const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
+    selectedLayers,
+}) => {
+    const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
+    const [temperatureData, setTemperatureData] = useState<
+        StationTemperatureData[]
+    >([]);
+    const [humidityData, setHumidityData] = useState<StationHumidityData[]>([]);
+    const [rainfallData, setRainfallData] = useState<StationRainfallData[]>([]);
+
     const isSmallScreen = useScreenSize();
-    const zoomLevel = isSmallScreen ? 10 : 11;
+    const zoomLevel = isSmallScreen ? 11 : 12;
 
-    useEffect(() => {
-        const loadWeatherData = async () => {
-            const data = await fetchWindData();
-            
-            setStations(data);
-
-            const tempData = await fetchTemperatureData();
-            setTemperatures(tempData);
-
-            const humidityData = await fetchHumidityData();
-            setHumidity(humidityData);
-
-            const rainfallData = await fetchRainfallData();
-            seRainfall(rainfallData);
-        };
-
-        // Initial load
-        loadWeatherData();
-
-        // Set up periodic fetching
-        const interval = setInterval(() => {
-            loadWeatherData();
-        }, 60000); // Fetch every 60 seconds
-
-        // Cleanup interval on component unmount
-        return () => clearInterval(interval);
-    }, []);
+    const handleWeatherDataUpdate = (data: {
+        windData: HistoricalWindData[];
+        temperatureData: StationTemperatureData[];
+        humidityData: StationHumidityData[];
+        rainfallData: StationRainfallData[];
+    }) => {
+        // Convert wind stations into lookup dictionaries
+        const windStationLookup = windStations.reduce((acc, station) => {
+            acc[station.id] = station;
+            return acc;
+        }, {} as Record<string, typeof windStations[0]>);
+    
+        // Group wind data by timestamp
+        const groupedWindData: Record<string, HistoricalWindData[]> = {};
+        data.windData.forEach((station) => {
+            const matchedStation = windStationLookup[station.id];
+            const timestamp = station.timestamp; // Assuming each station has a timestamp field
+    
+            if (!groupedWindData[timestamp]) {
+                groupedWindData[timestamp] = [];
+            }
+    
+            groupedWindData[timestamp].push({
+                id: station.id,
+                name: station.name,
+                timestamp: station.timestamp,
+                latitude: matchedStation?.location.latitude ?? 0,
+                longitude: matchedStation?.location.longitude ?? 0,
+                speed: station.speed,
+                direction: (station.direction + 180) % 360,
+                u: station.u,
+                v: station.v,
+            });
+        });
+    
+        // Convert grouped data to an array of arrays (sorted by timestamp)
+        const sortedTimestamps = Object.keys(groupedWindData).sort();
+        const formattedWindData: HistoricalWindData[][] = sortedTimestamps.map(
+            (timestamp) => groupedWindData[timestamp]
+        );
+    
+        // Set state with transformed data
+        setWindData(formattedWindData);
+    };
+    
 
     return (
         <div style={{ height: "80vh", width: "100%", position: "relative" }}>
+            <DatetimeSlider
+                selectedLayers={selectedLayers}
+                onDataUpdate={handleWeatherDataUpdate}
+            />
+
             <MapContainer
                 center={[1.3521, 103.8198]}
                 zoom={zoomLevel}
@@ -107,35 +134,34 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({ selectedLayers })
                     attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
                     url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
                 />
-                
+
                 {selectedLayers.includes("Windstream") &&
-                    stations.length > 0 && (
-                        <WindstreamCanvas stations={stations} />
+                    windData.length > 0 && (
+                        <HistoricalWindstreamCanvas stationsData={windData} totalPlaybackSeconds={120} />
                     )}
-                {selectedLayers.includes("Wind Direction") &&
-                    stations.length > 0 && (
-                        <WindDirectionCanvas stations={stations} />
+                {/* {selectedLayers.includes("Wind Direction") &&
+                    windData.length > 0 && (
+                        <RealtimeWindDirectionCanvas stations={windData} />
                     )}
                 {selectedLayers.includes("Wind Speed") &&
-                    stations.length > 0 && (
-                        <WindSpeedCanvas stations={stations} />
-                    )}
+                    windData.length > 0 && (
+                        <RealtimeWindSpeedCanvas stations={windData} />
+                    )} */}
                 {selectedLayers.includes("Air Temperature") &&
-                    temperatures.length > 0 && (
-                        <AirTemperatureCanvas stations={temperatures} />
+                    temperatureData.length > 0 && (
+                        <RealtimeAirTemperatureCanvas stations={temperatureData} />
                     )}
                 {selectedLayers.includes("Humidity") &&
-                    humidity.length > 0 && (
-                        <HumidityCanvas stations={humidity} />
+                    humidityData.length > 0 && (
+                        <RealtimeHumidityCanvas stations={humidityData} />
                     )}
                 {selectedLayers.includes("AllRainfallReadings") &&
-                    rainfall.length > 0 && (
-                        <RainfallReadingsCanvas stations={rainfall} />
+                    rainfallData.length > 0 && (
+                        <RealtimeRainfallReadingsCanvas stations={rainfallData} />
                     )}
                 {selectedLayers.includes("RainfallAreas") &&
-                    rainfall.length > 0 && (
-                        <                RainfallAreasCanvas
-                        stations={rainfall} />
+                    rainfallData.length > 0 && (
+                        <RealtimeRainfallAreasCanvas stations={rainfallData} />
                     )}
                 {/* Add the Singapore text overlay */}
                 <MapTextOverlay

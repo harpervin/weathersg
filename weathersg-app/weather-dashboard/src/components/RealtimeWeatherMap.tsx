@@ -3,13 +3,13 @@
 import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
-import WindstreamCanvas from "./WindstreamCanvas";
-import WindDirectionCanvas from "./WindDirectionCanvas";
-import WindSpeedCanvas from "./WindSpeedCanvas";
-import AirTemperatureCanvas from "./AirTemperatureCanvas";
-import HumidityCanvas from "./HumidityCanvas";
-import RainfallReadingsCanvas from "./RainfallReadingsCanvas";
-import RainfallAreasCanvas from "./RainfallAreasCanvas";
+import RealtimeWindstreamCanvas from "./realtime/RealtimeWindstreamCanvas";
+import RealtimeWindDirectionCanvas from "./realtime/RealtimeWindDirectionCanvas";
+import RealtimeWindSpeedCanvas from "./realtime/RealtimeWindSpeedCanvas";
+import RealtimeAirTemperatureCanvas from "./realtime/RealtimeAirTemperatureCanvas";
+import RealtimeHumidityCanvas from "./realtime/RealtimeHumidityCanvas";
+import RealtimeRainfallReadingsCanvas from "./realtime/RealtimeRainfallReadingsCanvas";
+import RealtimeRainfallAreasCanvas from "./realtime/RealtimeRainfallAreasCanvas";
 import MapTextOverlay from "./MapTextOverlay";
 import useScreenSize from "@/hooks/useScreenSize";
 
@@ -63,15 +63,14 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
         []
     );
     const [humidity, setHumidity] = useState<StationHumidityData[]>([]);
-    const [rainfall, seRainfall] = useState<StationRainfallData[]>([]);
+    const [rainfall, setRainfall] = useState<StationRainfallData[]>([]);
     const isSmallScreen = useScreenSize();
     const zoomLevel = isSmallScreen ? 10 : 11;
 
     useEffect(() => {
         const loadWeatherData = async () => {
-            const data = await fetchWindData();
-            console.log(data);
-            setStations(data);
+            const windData = await fetchWindData();
+            setStations(windData);
 
             const tempData = await fetchTemperatureData();
             setTemperatures(tempData);
@@ -80,7 +79,12 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
             setHumidity(humidityData);
 
             const rainfallData = await fetchRainfallData();
-            seRainfall(rainfallData);
+            setRainfall(rainfallData);
+
+            console.log(windData);
+            console.log(tempData);
+            console.log(humidityData);
+            console.log(rainfallData);
         };
 
         // Initial load
@@ -111,30 +115,30 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
 
                 {selectedLayers.includes("Windstream") &&
                     stations.length > 0 && (
-                        <WindstreamCanvas stations={stations} />
+                        <RealtimeWindstreamCanvas stations={stations} />
                     )}
                 {selectedLayers.includes("Wind Direction") &&
                     stations.length > 0 && (
-                        <WindDirectionCanvas stations={stations} />
+                        <RealtimeWindDirectionCanvas stations={stations} />
                     )}
                 {selectedLayers.includes("Wind Speed") &&
                     stations.length > 0 && (
-                        <WindSpeedCanvas stations={stations} />
+                        <RealtimeWindSpeedCanvas stations={stations} />
                     )}
                 {selectedLayers.includes("Air Temperature") &&
                     temperatures.length > 0 && (
-                        <AirTemperatureCanvas stations={temperatures} />
+                        <RealtimeAirTemperatureCanvas stations={temperatures} />
                     )}
                 {selectedLayers.includes("Humidity") && humidity.length > 0 && (
-                    <HumidityCanvas stations={humidity} />
+                    <RealtimeHumidityCanvas stations={humidity} />
                 )}
                 {selectedLayers.includes("AllRainfallReadings") &&
                     rainfall.length > 0 && (
-                        <RainfallReadingsCanvas stations={rainfall} />
+                        <RealtimeRainfallReadingsCanvas stations={rainfall} />
                     )}
                 {selectedLayers.includes("RainfallAreas") &&
                     rainfall.length > 0 && (
-                        <RainfallAreasCanvas stations={rainfall} />
+                        <RealtimeRainfallAreasCanvas stations={rainfall} />
                     )}
                 {/* Add the Singapore text overlay */}
                 <MapTextOverlay

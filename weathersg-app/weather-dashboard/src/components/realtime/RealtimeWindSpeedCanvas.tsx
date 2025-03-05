@@ -1,12 +1,12 @@
 import React, { useEffect, useRef } from "react";
-import { StationData } from "../utils/windData";
+import { StationData } from "../../utils/windData";
 import { useMap } from "react-leaflet";
 
 type WindCanvasProps = {
     stations: StationData[];
 };
 
-const WindSpeedCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
+const RealtimeWindSpeedCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
 
@@ -16,7 +16,9 @@ const WindSpeedCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
 
         // Adjust canvas dimensions to match map container
         const resizeCanvas = () => {
-            const { width, height } = map.getContainer().getBoundingClientRect();
+            const { width, height } = map
+                .getContainer()
+                .getBoundingClientRect();
             canvas.width = width;
             canvas.height = height;
         };
@@ -29,7 +31,10 @@ const WindSpeedCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
 
             stations.forEach((station) => {
                 // Convert station latitude and longitude to canvas pixel positions
-                const point = map.latLngToContainerPoint([station.latitude, station.longitude]);
+                const point = map.latLngToContainerPoint([
+                    station.latitude,
+                    station.longitude,
+                ]);
                 const x = point.x;
                 const y = point.y;
 
@@ -89,4 +94,4 @@ const WindSpeedCanvas: React.FC<WindCanvasProps> = ({ stations }) => {
     );
 };
 
-export default WindSpeedCanvas;
+export default RealtimeWindSpeedCanvas;

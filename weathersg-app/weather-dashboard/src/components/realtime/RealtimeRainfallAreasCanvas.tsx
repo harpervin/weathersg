@@ -10,7 +10,7 @@ type RainfallCanvasProps = {
     }[];
 };
 
-const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
+const RealtimeRainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
     const [showTooltip, setShowTooltip] = useState(false); // State to manage tooltip visibility
@@ -179,4 +179,4 @@ const RainfallAreasCanvas: React.FC<RainfallCanvasProps> = ({ stations }) => {
     );
 };
 
-export default RainfallAreasCanvas;
+export default RealtimeRainfallAreasCanvas;
