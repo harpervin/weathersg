@@ -4,18 +4,20 @@ import React, { useEffect, useState } from "react";
 import { MapContainer, TileLayer, useMap } from "react-leaflet";
 import "leaflet/dist/leaflet.css";
 import HistoricalWindstreamCanvas from "./historical/HistoricalWindstreamCanvas";
-import RealtimeWindDirectionCanvas from "./realtime/RealtimeWindDirectionCanvas";
-import RealtimeWindSpeedCanvas from "./realtime/RealtimeWindSpeedCanvas";
-import RealtimeAirTemperatureCanvas from "./realtime/RealtimeAirTemperatureCanvas";
-import RealtimeHumidityCanvas from "./realtime/RealtimeHumidityCanvas";
+import HistoricalWindDirectionCanvas from "./historical/HistoricalWindDirectionCanvas";
+import HistoricalWindSpeedCanvas from "./historical/HistoricalWindSpeedCanvas";
+import HistoricalAirTemperatureCanvas from "./historical/HistoricalAirTemperatureCanvas";
+import HistoricalHumidityCanvas from "./historical/HistoricalHumidityCanvas";
 import RealtimeRainfallReadingsCanvas from "./realtime/RealtimeRainfallReadingsCanvas";
 import RealtimeRainfallAreasCanvas from "./realtime/RealtimeRainfallAreasCanvas";
 import MapTextOverlay from "./MapTextOverlay";
 import useScreenSize from "@/hooks/useScreenSize";
 import DatetimeSlider from "@/components/DatetimeSlider";
 
-
-import { HistoricalWindData } from "../utils/historicalWeatherData";
+import {
+    HistoricalWeatherData,
+    HistoricalWindData,
+} from "../utils/historicalWeatherData";
 import { StationHumidityData } from "@/utils/humidityData";
 import { StationTemperatureData } from "@/utils/airTemperatureData";
 import { StationRainfallData } from "@/utils/rainfallData";
@@ -24,14 +26,14 @@ import windStations from "../utils/wind_stations.json";
 import rainfallStations from "../utils/rainfall_stations.json";
 
 type MapWithWeatherProps = {
-    selectedLayers: string[]; // Prop to control wind stream visibility
+    selectedLayers: string[];
 };
 
 const CenterButton: React.FC = () => {
     const map = useMap();
 
     const handleCenterMap = () => {
-        map.setView([1.3521, 103.8198], 12); // Reset to Singapore coordinates and zoom level
+        map.setView([1.3521, 103.8198], 12);
     };
 
     return (
@@ -61,60 +63,178 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     selectedLayers,
 }) => {
     const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
+    const [humidityData, setHumidityData] = useState<HistoricalWeatherData[][]>(
+        []
+    );
     const [temperatureData, setTemperatureData] = useState<
-        StationTemperatureData[]
+        HistoricalWeatherData[][]
     >([]);
-    const [humidityData, setHumidityData] = useState<StationHumidityData[]>([]);
-    const [rainfallData, setRainfallData] = useState<StationRainfallData[]>([]);
+
+    const [rainfallData, setRainfallData] = useState<HistoricalWeatherData[][]>(
+        []
+    );
+    const [currentFrame, setCurrentFrame] = useState(0);
+    const [timestampDuration, setTimestampDuration] = useState(3000);
+    const [currentTimestamp, setCurrentTimestamp] = useState("");
 
     const isSmallScreen = useScreenSize();
-    const zoomLevel = isSmallScreen ? 11 : 12;
+    const zoomLevel = isSmallScreen ? 10 : 11;
 
     const handleWeatherDataUpdate = (data: {
         windData: HistoricalWindData[];
-        temperatureData: StationTemperatureData[];
-        humidityData: StationHumidityData[];
+        temperatureData: HistoricalWeatherData[];
+        humidityData: HistoricalWeatherData[];
         rainfallData: StationRainfallData[];
     }) => {
-        // Convert wind stations into lookup dictionaries
-        const windStationLookup = windStations.reduce((acc, station) => {
-            acc[station.id] = station;
+        const stationLookup = windStations.reduce((acc, station) => {
+            acc[station.id.trim()] = station; // Normalize ID
             return acc;
-        }, {} as Record<string, typeof windStations[0]>);
-    
-        // Group wind data by timestamp
+        }, {} as Record<string, (typeof windStations)[0]>);
+
         const groupedWindData: Record<string, HistoricalWindData[]> = {};
         data.windData.forEach((station) => {
-            const matchedStation = windStationLookup[station.id];
-            const timestamp = station.timestamp; // Assuming each station has a timestamp field
-    
+            const matchedStation = stationLookup[station.stationId];
+
+            const timestamp = station.timestamp;
+
             if (!groupedWindData[timestamp]) {
                 groupedWindData[timestamp] = [];
             }
-    
+
             groupedWindData[timestamp].push({
-                id: station.id,
+                stationId: station.stationId,
                 name: station.name,
                 timestamp: station.timestamp,
                 latitude: matchedStation?.location.latitude ?? 0,
                 longitude: matchedStation?.location.longitude ?? 0,
                 speed: station.speed,
-                direction: (station.direction + 180) % 360,
+                direction: station.direction,
                 u: station.u,
                 v: station.v,
             });
         });
-    
-        // Convert grouped data to an array of arrays (sorted by timestamp)
+
+        const groupedHumidityData: Record<string, HistoricalWeatherData[]> = {};
+        data.humidityData.forEach((station) => {
+            const matchedStation = stationLookup[station.stationId];
+
+            const timestamp = station.timestamp;
+
+            if (!groupedHumidityData[timestamp]) {
+                groupedHumidityData[timestamp] = [];
+            }
+
+            groupedHumidityData[timestamp].push({
+                stationId: station.stationId,
+                name: matchedStation.name,
+                timestamp: station.timestamp,
+                latitude: matchedStation?.location.latitude ?? 0,
+                longitude: matchedStation?.location.longitude ?? 0,
+                value: station.value,
+            });
+        });
+
+        const groupedTemperatureData: Record<string, HistoricalWeatherData[]> =
+            {};
+        data.temperatureData.forEach((station) => {
+            const matchedStation = stationLookup[station.stationId];
+
+            const timestamp = station.timestamp;
+
+            if (!groupedTemperatureData[timestamp]) {
+                groupedTemperatureData[timestamp] = [];
+            }
+
+            groupedTemperatureData[timestamp].push({
+                stationId: station.stationId,
+                name: matchedStation.name,
+                timestamp: station.timestamp,
+                latitude: matchedStation?.location.latitude ?? 0,
+                longitude: matchedStation?.location.longitude ?? 0,
+                value: station.value,
+            });
+        });
+
         const sortedTimestamps = Object.keys(groupedWindData).sort();
         const formattedWindData: HistoricalWindData[][] = sortedTimestamps.map(
             (timestamp) => groupedWindData[timestamp]
         );
-    
-        // Set state with transformed data
+
+        const sortedHumidityTimestamps =
+            Object.keys(groupedHumidityData).sort();
+        const formattedHumidityData: HistoricalWeatherData[][] =
+            sortedHumidityTimestamps.map(
+                (timestamp) => groupedHumidityData[timestamp]
+            );
+
+        const sortedTempTimestamps = Object.keys(groupedTemperatureData).sort();
+        const formattedTemperatureData: HistoricalWeatherData[][] =
+            sortedTempTimestamps.map(
+                (timestamp) => groupedTemperatureData[timestamp]
+            );
+
         setWindData(formattedWindData);
+        setHumidityData(formattedHumidityData);
+        setTemperatureData(formattedTemperatureData);
     };
-    
+
+    useEffect(() => {
+        // If no layers are selected, clear the timestamp immediately
+        if (selectedLayers.length === 0) {
+            setCurrentTimestamp("");
+            return;
+        }
+
+        // Ensure the timestamp updates immediately when data is available
+        let newTimestamp = "";
+        if (windData[currentFrame]?.[0]?.timestamp) {
+            newTimestamp = windData[currentFrame][0].timestamp;
+        } else if (humidityData[currentFrame]?.[0]?.timestamp) {
+            newTimestamp = humidityData[currentFrame][0].timestamp;
+        } else if (temperatureData[currentFrame]?.[0]?.timestamp) {
+            newTimestamp = temperatureData[currentFrame][0].timestamp;
+        }
+        setCurrentTimestamp(newTimestamp);
+
+        // Set interval to update timestamp over time
+        const interval = setInterval(() => {
+            setCurrentFrame((prevFrame) => {
+                const windLength = windData.length;
+                const humidityLength = humidityData.length;
+                const tempLength = temperatureData.length;
+                const maxFrames = Math.max(
+                    windLength,
+                    humidityLength,
+                    tempLength
+                );
+
+                if (maxFrames === 0) return prevFrame; // Prevent division by zero
+
+                const newFrame = (prevFrame + 1) % maxFrames;
+
+                let updatedTimestamp = "";
+                if (windData[newFrame]?.[0]?.timestamp) {
+                    updatedTimestamp = windData[newFrame][0].timestamp;
+                } else if (humidityData[newFrame]?.[0]?.timestamp) {
+                    updatedTimestamp = humidityData[newFrame][0].timestamp;
+                } else if (temperatureData[newFrame]?.[0]?.timestamp) {
+                    updatedTimestamp = temperatureData[newFrame][0].timestamp;
+                }
+
+                setCurrentTimestamp(updatedTimestamp);
+                return newFrame;
+            });
+        }, timestampDuration);
+
+        return () => clearInterval(interval);
+    }, [
+        selectedLayers, // Trigger update when layers are selected/deselected
+        windData,
+        humidityData,
+        temperatureData,
+        timestampDuration,
+        currentFrame,
+    ]);
 
     return (
         <div style={{ height: "80vh", width: "100%", position: "relative" }}>
@@ -137,35 +257,54 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
 
                 {selectedLayers.includes("Windstream") &&
                     windData.length > 0 && (
-                        <HistoricalWindstreamCanvas stationsData={windData} totalPlaybackSeconds={120} />
+                        <HistoricalWindstreamCanvas
+                            stationsData={windData}
+                            currentFrame={currentFrame}
+                        />
                     )}
-                {/* {selectedLayers.includes("Wind Direction") &&
+                {selectedLayers.includes("Wind Direction") &&
                     windData.length > 0 && (
-                        <RealtimeWindDirectionCanvas stations={windData} />
+                        <HistoricalWindDirectionCanvas
+                            stationsData={windData}
+                            currentFrame={currentFrame}
+                        />
                     )}
                 {selectedLayers.includes("Wind Speed") &&
                     windData.length > 0 && (
-                        <RealtimeWindSpeedCanvas stations={windData} />
-                    )} */}
+                        <HistoricalWindSpeedCanvas
+                            stationsData={windData}
+                            currentFrame={currentFrame}
+                        />
+                    )}
                 {selectedLayers.includes("Air Temperature") &&
                     temperatureData.length > 0 && (
-                        <RealtimeAirTemperatureCanvas stations={temperatureData} />
+                        <HistoricalAirTemperatureCanvas
+                            stationsData={temperatureData}
+                            currentFrame={currentFrame}
+                        />
                     )}
                 {selectedLayers.includes("Humidity") &&
                     humidityData.length > 0 && (
-                        <RealtimeHumidityCanvas stations={humidityData} />
+                        <HistoricalHumidityCanvas
+                            stationsData={humidityData}
+                            currentFrame={currentFrame}
+                        />
                     )}
-                {selectedLayers.includes("AllRainfallReadings") &&
+                {/* {selectedLayers.includes("AllRainfallReadings") &&
                     rainfallData.length > 0 && (
-                        <RealtimeRainfallReadingsCanvas stations={rainfallData} />
+                        <RealtimeRainfallReadingsCanvas
+                            stationsData={rainfallData}
+                        />
                     )}
                 {selectedLayers.includes("RainfallAreas") &&
                     rainfallData.length > 0 && (
-                        <RealtimeRainfallAreasCanvas stations={rainfallData} />
-                    )}
-                {/* Add the Singapore text overlay */}
+                        <RealtimeRainfallAreasCanvas
+                            stationsData={rainfallData}
+                        />
+                    )} */}
+
                 <MapTextOverlay
-                    position={[1.3521, 103.8198]} // Singapore's coordinates
+                    position={[1.3521, 103.8198]}
                     text="Singapore"
                     style={{
                         fontSize: "21px",
@@ -175,7 +314,28 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                         stroke: "black",
                     }}
                 />
-                {/* Add the CenterButton inside the MapContainer */}
+                {/* Timestamp Overlay - Displayed centrally for all layers */}
+                {currentTimestamp && (
+                    <div
+                        style={{
+                            position: "absolute",
+                            top: "10px",
+                            left: "50%",
+                            transform: "translateX(-50%)",
+                            backgroundColor: "rgba(0, 0, 0, 0.7)",
+                            color: "white",
+                            padding: "10px 15px",
+                            borderRadius: "5px",
+                            fontSize: "18px",
+                            fontWeight: "bold",
+                            textAlign: "center",
+                            zIndex: 10000,
+                        }}
+                    >
+                        {currentTimestamp}
+                    </div>
+                )}
+
                 <CenterButton />
             </MapContainer>
         </div>

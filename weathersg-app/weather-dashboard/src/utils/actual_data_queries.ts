@@ -10,6 +10,7 @@ export const getMinutelyIntervalQuery = (table: string, interval: number, minute
 };
 
 export const getHourlyIntervalQuery = (table: string, interval: number, hour: string, minute: string) => {
+    console.log(interval,  hour, minute)
     return `SELECT 
         strftime('%Y-%m-%d %H:%M:00', timestamp) AS hour_start, 
         *

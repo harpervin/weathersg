@@ -194,6 +194,7 @@ async function getWeatherData(
             // console.log("Executing Query:", q); // Debugging
 
             // Dynamically generate the correct number of parameters
+            console.log(startDate, endDate)
             const queryParams = years.flatMap(() => [startDate, endDate]);
             // console.log("Query Parameters:", queryParams);
 

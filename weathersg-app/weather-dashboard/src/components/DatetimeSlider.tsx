@@ -12,7 +12,7 @@ import { StationData } from "../utils/windData";
 import { StationHumidityData } from "@/utils/humidityData";
 import { StationTemperatureData } from "@/utils/airTemperatureData";
 import { StationRainfallData } from "@/utils/rainfallData";
-import { HistoricalWindData } from "@/utils/historicalWeatherData";
+import { HistoricalWeatherData, HistoricalWindData } from "@/utils/historicalWeatherData";
 type MapWithWeatherProps = {
     selectedLayers: string[]; // Prop to control wind stream visibility
 };
@@ -21,17 +21,17 @@ const DatetimeSlider: React.FC<{
     selectedLayers: string[];
     onDataUpdate: (data: {
         windData: HistoricalWindData[];
-        temperatureData: StationTemperatureData[];
-        humidityData: StationHumidityData[];
+        temperatureData: HistoricalWeatherData[];
+        humidityData: HistoricalWeatherData[];
         rainfallData: StationRainfallData[];
     }) => void;
 }> = ({ selectedLayers, onDataUpdate }) => {
-    const [windData, setWindData] = useState<StationData[]>([]);
-    const [temperatureData, setTemperatureData] = useState<
-        StationTemperatureData[]
-    >([]);
-    const [humidityData, setHumidityData] = useState<StationHumidityData[]>([]);
-    const [rainfallData, setRainfallData] = useState<StationRainfallData[]>([]);
+    // const [windData, setWindData] = useState<StationData[]>([]);
+    // const [temperatureData, setTemperatureData] = useState<
+    //     StationTemperatureData[]
+    // >([]);
+    // const [humidityData, setHumidityData] = useState<StationHumidityData[]>([]);
+    // const [rainfallData, setRainfallData] = useState<StationRainfallData[]>([]);
 
     // Readable start & end times
     const [readableStartTime, setReadableStartTime] = useState<string>("");

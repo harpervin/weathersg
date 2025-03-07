@@ -5,7 +5,6 @@ import { useEffect, useState } from "react";
 import CheckboxGroup from "@/components/CheckboxGroup";
 import SearchBar from "@/components/SearchBar";
 import Tabs from "@/components/Tabs";
-import HistoricalWeatherMap from "@/components/HistoricalWeatherMap";
 
 const RealtimeWeatherMap = dynamic(
     () => import("../components/RealtimeWeatherMap"),
@@ -13,6 +12,10 @@ const RealtimeWeatherMap = dynamic(
         ssr: false,
     }
 );
+const HistoricalWeatherMap = dynamic(
+    () => import("../components/HistoricalWeatherMap"),
+    { ssr: false }
+  );
 
 type MapTab = "Realtime Weather Map" | "Historical Weather Map";
 

@@ -133,5 +133,122 @@
             "latitude": 1.37288,
             "longitude": 103.72244
         }
+    },
+    {
+        "id": "S109",
+        "deviceId": "S109",
+        "name": "Ang Mo Kio Avenue 5",
+        "location": {
+            "latitude": 1.3764,
+            "longitude": 103.8492
+        }
+    },
+    {
+        "id": "S50",
+        "deviceId": "S50",
+        "name": "Clementi Road",
+        "location": {
+            "latitude": 1.3337,
+            "longitude": 103.7768
+        }
+    },
+    {
+        "id": "S107",
+        "deviceId": "S107",
+        "name": "East Coast Parkway",
+        "location": {
+            "latitude": 1.3135,
+            "longitude": 103.9625
+        }
+    },
+    {
+        "id": "S43",
+        "deviceId": "S43",
+        "name": "Kim Chuan Road",
+        "location": {
+            "latitude": 1.3399,
+            "longitude": 103.8878
+        }
+    },
+    {
+        "id": "S108",
+        "deviceId": "S108",
+        "name": "Marina Gardens Drive",
+        "location": {
+            "latitude": 1.2799,
+            "longitude": 103.8703
+        }
+    },
+    {
+        "id": "S44",
+        "deviceId": "S44",
+        "name": "Nanyang Avenue",
+        "location": {
+            "latitude": 1.34583,
+            "longitude": 103.68166
+        }
+    },
+    {
+        "id": "S106",
+        "deviceId": "S106",
+        "name": "Pulau Ubin",
+        "location": {
+            "latitude": 1.4168,
+            "longitude": 103.9673
+        }
+    },
+    {
+        "id": "S122",
+        "deviceId": "S122",
+        "name": "Sembawang Road",
+        "location": {
+            "latitude": 1.41731,
+            "longitude": 103.8249
+        }
+    },
+    {
+        "id": "S115",
+        "deviceId": "S115",
+        "name": "Tuas South Avenue 3",
+        "location": {
+            "latitude": 1.29377,
+            "longitude": 103.61843
+        }
+    },
+    {
+        "id": "S24",
+        "deviceId": "S24",
+        "name": "Upper Changi Road North",
+        "location": {
+            "latitude": 1.3678,
+            "longitude": 103.9826
+        }
+    },
+    {
+        "id": "S116",
+        "deviceId": "S116",
+        "name": "West Coast Highway",
+        "location": {
+            "latitude": 1.281,
+            "longitude": 103.754
+        }
+    },
+    {
+        "id": "S104",
+        "deviceId": "S104",
+        "name": "Woodlands Avenue 9",
+        "location": {
+            "latitude": 1.44387,
+            "longitude": 103.78538
+        }
+    },
+    {
+        "id": "S100",
+        "deviceId": "S100",
+        "name": "Woodlands Road",
+        "location": {
+            "latitude": 1.4172,
+            "longitude": 103.74855
+        }
     }
 ]
