@@ -5,7 +5,7 @@ import { useMap } from "react-leaflet";
 import { HistoricalWindData } from "@/utils/historicalWeatherData";
 
 type HistoricalWindCanvasProps = {
-    stationsData: HistoricalWindData[][];
+    stationsData: HistoricalWindData[][]; // Array of station data at different timestamps
     currentFrame: number; // Synchronized frame from parent
 };
 
@@ -21,6 +21,10 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
     const animationRef = useRef<number | null>(null);
+    const particlesRef = useRef<
+        { x: number; y: number; lat: number; lng: number; life: number }[]
+    >([]);
+    const MAX_PARTICLES = 5000;
 
     // Define Singapore's geographical bounds
     const SINGAPORE_BOUNDS = {
@@ -32,7 +36,6 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
 
     useEffect(() => {
         if (stationsData.length === 0) return;
-
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d")!;
 
@@ -41,48 +44,50 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             canvas.width = width;
             canvas.height = height;
         };
-        resizeCanvas();
-        map.on("resize", resizeCanvas);
-
-        let particles: {
-            x: number;
-            y: number;
-            lat: number;
-            lng: number;
-            life: number;
-        }[] = [];
 
         const getRandomLatLng = () => ({
-            lat: Math.random() * (SINGAPORE_BOUNDS.latMax - SINGAPORE_BOUNDS.latMin) + SINGAPORE_BOUNDS.latMin,
-            lng: Math.random() * (SINGAPORE_BOUNDS.lngMax - SINGAPORE_BOUNDS.lngMin) + SINGAPORE_BOUNDS.lngMin,
+            lat:
+                Math.random() * (SINGAPORE_BOUNDS.latMax - SINGAPORE_BOUNDS.latMin) +
+                SINGAPORE_BOUNDS.latMin,
+            lng:
+                Math.random() * (SINGAPORE_BOUNDS.lngMax - SINGAPORE_BOUNDS.lngMin) +
+                SINGAPORE_BOUNDS.lngMin,
         });
 
         const initializeParticles = () => {
+            particlesRef.current = [];
             const zoomLevel = map.getZoom();
-            const particleDensity = Math.pow(2, zoomLevel - 10) * 500; // Scale particle count with zoom
-            particles = Array(Math.round(particleDensity))
-                .fill(null)
-                .map(() => {
-                    const { lat, lng } = getRandomLatLng();
-                    const point = map.latLngToContainerPoint([lat, lng]);
-                    return { x: point.x, y: point.y, lat, lng, life: Math.random() * 100 };
-                });
-        };
+            const particleDensity = Math.min(
+                MAX_PARTICLES,
+                Math.round(Math.pow(2, zoomLevel - 10) * 500)
+            );
 
-        initializeParticles();
-        map.on("zoomend", initializeParticles);
+            particlesRef.current = Array.from({ length: particleDensity }, () => {
+                const { lat, lng } = getRandomLatLng();
+                const point = map.latLngToContainerPoint([lat, lng]);
+                return {
+                    x: point.x,
+                    y: point.y,
+                    lat,
+                    lng,
+                    life: Math.random() * 100,
+                };
+            });
+        };
 
         const updateParticles = () => {
             const stations = stationsData[currentFrame] || [];
 
-            particles.forEach((particle) => {
-                // Find the nearest wind station
+            particlesRef.current.forEach((particle) => {
                 const nearestStation = stations.reduce<NearestStationAccumulator>(
                     (nearest, s) => {
                         const distance = Math.sqrt(
-                            Math.pow(particle.lat - s.latitude, 2) + Math.pow(particle.lng - s.longitude, 2)
+                            Math.pow(particle.lat - s.latitude, 2) +
+                                Math.pow(particle.lng - s.longitude, 2)
                         );
-                        return distance < nearest.distance ? { station: s, distance } : nearest;
+                        return distance < nearest.distance
+                            ? { station: s, distance }
+                            : nearest;
                     },
                     { station: null, distance: Infinity }
                 ).station;
@@ -118,7 +123,7 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
 
         const drawParticles = () => {
             ctx.clearRect(0, 0, canvas.width, canvas.height);
-            particles.forEach((particle) => {
+            particlesRef.current.forEach((particle) => {
                 ctx.beginPath();
                 ctx.arc(particle.x, particle.y, 2, 0, 2 * Math.PI);
                 ctx.fillStyle = "rgba(0, 150, 255, 0.7)";
@@ -132,7 +137,14 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             animationRef.current = requestAnimationFrame(animate);
         };
 
+        // Resize and initialize
+        resizeCanvas();
+        initializeParticles();
         animate();
+
+        // Event listeners
+        map.on("resize", resizeCanvas);
+        map.on("zoomend", initializeParticles);
 
         return () => {
             cancelAnimationFrame(animationRef.current!);

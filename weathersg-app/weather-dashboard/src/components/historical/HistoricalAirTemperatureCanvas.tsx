@@ -18,7 +18,6 @@ const RealtimeAirTemperatureCanvas: React.FC<AirTemperatureCanvasProps> = ({
     const animationRef = useRef<number | null>(null);
 
     useEffect(() => {
-        console.log(stationsData)
         if (stationsData.length === 0) return;
         const canvas = canvasRef.current!;
         const ctx = canvas.getContext("2d")!;

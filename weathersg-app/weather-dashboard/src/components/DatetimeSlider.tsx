@@ -12,10 +12,14 @@ import { StationData } from "../utils/windData";
 import { StationHumidityData } from "@/utils/humidityData";
 import { StationTemperatureData } from "@/utils/airTemperatureData";
 import { StationRainfallData } from "@/utils/rainfallData";
-import { HistoricalWeatherData, HistoricalWindData } from "@/utils/historicalWeatherData";
-type MapWithWeatherProps = {
-    selectedLayers: string[]; // Prop to control wind stream visibility
-};
+import { IoMdInformationCircle } from "react-icons/io";
+
+import {
+    HistoricalWeatherData,
+    HistoricalWindData,
+} from "@/utils/historicalWeatherData";
+
+import { CircularProgress } from "@mui/material";
 
 const DatetimeSlider: React.FC<{
     selectedLayers: string[];
@@ -25,13 +29,29 @@ const DatetimeSlider: React.FC<{
         humidityData: HistoricalWeatherData[];
         rainfallData: StationRainfallData[];
     }) => void;
-}> = ({ selectedLayers, onDataUpdate }) => {
-    // const [windData, setWindData] = useState<StationData[]>([]);
-    // const [temperatureData, setTemperatureData] = useState<
-    //     StationTemperatureData[]
-    // >([]);
-    // const [humidityData, setHumidityData] = useState<StationHumidityData[]>([]);
-    // const [rainfallData, setRainfallData] = useState<StationRainfallData[]>([]);
+    currentFrame: number;
+    currentTimestamp: string;
+    totalFrames: number;
+    setCurrentFrame: React.Dispatch<React.SetStateAction<number>>;
+}> = ({
+    selectedLayers,
+    onDataUpdate,
+    currentFrame,
+    currentTimestamp,
+    totalFrames,
+    setCurrentFrame,
+}) => {
+    // Sync slider with the map's animation frame
+    useEffect(() => {
+        setSliderValue(currentFrame);
+    }, [currentFrame]);
+
+    // Reset slider when timestamp loops back
+    useEffect(() => {
+        if (currentFrame === 0) {
+            setSliderValue(0);
+        }
+    }, [currentFrame]);
 
     // Readable start & end times
     const [readableStartTime, setReadableStartTime] = useState<string>("");
@@ -64,6 +84,9 @@ const DatetimeSlider: React.FC<{
 
     const [tablesToQuery, setTablesToQuery] = useState<string[]>([]);
 
+    const [loading, setLoading] = useState<boolean>(false);
+    const [missingParams, setMissingParams] = useState<String>("");
+
     const tableMap: Record<string, string> = {
         Windstream: "wind_combined",
         "Wind Direction": "wind_combined",
@@ -84,10 +107,8 @@ const DatetimeSlider: React.FC<{
         const startDate = today.startOf("day");
         const endDate = today.endOf("day");
 
-        setReadableStartTime(startDate.format("DD MMM YY, HH:mm"));
-
-        setStartTime(startDate.format("YYYY-MM-DD HH:mm"));
-        setEndTime(endDate.format("YYYY-MM-DD HH:mm"));
+        setStartTime("2021-01-01 00:00");
+        setEndTime("2023-12-31 23:59");
     }, []);
 
     useEffect(() => {
@@ -95,6 +116,7 @@ const DatetimeSlider: React.FC<{
             const start = dayjs(startTime);
             const end = dayjs(endTime);
             const totalMinutes = end.diff(start, "minute");
+            setReadableStartTime(start.format("DD MMM YY, HH:mm"));
 
             setMaxInterval(totalMinutes);
             updateDropdownStates(totalMinutes);
@@ -130,41 +152,32 @@ const DatetimeSlider: React.FC<{
         setDisableMinutes(1 > totalMinutes); // 1 minute = 1 minute (always enabled)
     };
 
+    // Handle manual slider movement
     const handleSliderChange = (event: Event, value: number | number[]) => {
         if (typeof value === "number") {
             setSliderValue(value);
-
-            const start = dayjs(startTime);
-
-            // Instead of using static minutes, use proper date unit calculations
-            const newTime = start
-                .add(selectedYears * value, "year")
-                .add(selectedMonths * value, "month")
-                .add(selectedDays * value, "day")
-                .add(selectedHours * value, "hour")
-                .add(selectedMinutes * value, "minute")
-                .format("DD MMM YY, HH:mm");
-
-            setReadableStartTime(newTime);
+            setCurrentFrame(value); // Update the frame in HistoricalWeatherMap
         }
     };
 
     const handleFetchData = async () => {
         console.log("Tables to Query:", tablesToQuery);
         if (tablesToQuery.length === 0) {
-            console.log("No tables selected, skipping API call.");
-            return null; // Exit early
+            setMissingParams("Weather Filter");
+            return;
         }
-    
+
         console.log("Selected Interval:", selectedInterval);
         if (!selectedInterval || String(selectedInterval).startsWith("0")) {
-            console.log("No interval selected, skipping API call.");
-            return null; // Exit early
+            setMissingParams("Time Interval");
+            return;
         }
-    
+
+        setMissingParams("");
+        setLoading(true);
         try {
             console.log("Fetching data for tables:", tablesToQuery);
-    
+
             // Send multiple API requests in parallel
             const responses = await Promise.all(
                 tablesToQuery.map(async (table) => {
@@ -174,40 +187,44 @@ const DatetimeSlider: React.FC<{
                         interval: String(selectedInterval),
                         param: table,
                     });
-    
-                    const response = await fetch(`/api?${queryParams.toString()}`);
-    
-                    if (!response.ok) throw new Error(`Failed to fetch data from ${table}`);
-    
+
+                    const response = await fetch(`
+                        /api?${queryParams.toString()}`);
+
+                    if (!response.ok)
+                        throw new Error("Failed to fetch data from ${table}");
+
                     return { table, data: await response.json() };
                 })
             );
-    
+
             // Organize data by table
             const weatherData = {
                 windData:
-                    responses.find((res) => res.table === "wind_combined")?.data || [],
+                    responses.find((res) => res.table === "wind_combined")
+                        ?.data || [],
                 temperatureData:
-                    responses.find((res) => res.table === "air_temperature")?.data || [],
+                    responses.find((res) => res.table === "air_temperature")
+                        ?.data || [],
                 humidityData:
-                    responses.find((res) => res.table === "relative_humidity")?.data || [],
+                    responses.find((res) => res.table === "relative_humidity")
+                        ?.data || [],
                 rainfallData:
-                    responses.find((res) => res.table === "rainfall")?.data || [],
+                    responses.find((res) => res.table === "rainfall")?.data ||
+                    [],
             };
-    
+
             console.log("Fetched Weather Data:", weatherData);
-    
+
             // ✅ Pass the data to parent component
             onDataUpdate(weatherData);
-    
+            setLoading(false);
             return weatherData; // Return structured weather data
-    
         } catch (error) {
             console.error("Error fetching weather data:", error);
             return null; // Return null on failure
         }
     };
-    
 
     return (
         <div className="p-4 bg-gray-100 rounded shadow-lg my-4">
@@ -227,6 +244,7 @@ const DatetimeSlider: React.FC<{
                                     newValue?.format("YYYY-MM-DD HH:mm") || ""
                                 )
                             }
+                            format="DD/MM/YYYY HH:mm"
                         />
                     </LocalizationProvider>
                     <h2 className="font-bold">–</h2>
@@ -239,6 +257,7 @@ const DatetimeSlider: React.FC<{
                                     newValue?.format("YYYY-MM-DD HH:mm") || ""
                                 )
                             }
+                            format="DD/MM/YYYY HH:mm"
                         />
                     </LocalizationProvider>
                 </Stack>
@@ -381,13 +400,38 @@ const DatetimeSlider: React.FC<{
                 </Stack>
             </div>
 
-            <div className="my-4">
+            <div className="flex items-center">
+                <IoMdInformationCircle size={25} />
+                <div className="mx-2 font-semibold">
+                    Larger time intervals will take a longer time to fetch
+                    weather data.
+                </div>
+            </div>
+
+            <div className="my-4 flex items-center space-x-4">
                 <button
                     className="rounded-full bg-blue-200 p-2 h-12 text-black font-semibold hover:bg-blue-400 hover:text-white"
                     onClick={handleFetchData}
                 >
                     Play Animation
                 </button>
+                {loading && (
+                    <div className="flex items-center space-x-2">
+                        <CircularProgress size={24} />
+                        <span className="font-semibold">
+                            Fetching data... Please wait for animations to be
+                            updated
+                        </span>
+                    </div>
+                )}
+
+                {missingParams != "" && (
+                    <div className="flex items-center space-x-2">
+                        <span className="font-semibold text-red-500">
+                            Please select {missingParams} to view data!
+                        </span>
+                    </div>
+                )}
             </div>
 
             <hr />
@@ -400,10 +444,10 @@ const DatetimeSlider: React.FC<{
                     value={sliderValue}
                     onChange={handleSliderChange}
                     valueLabelDisplay="auto"
-                    valueLabelFormat={readableStartTime}
+                    valueLabelFormat={() => currentTimestamp}
                     step={1}
                     min={0}
-                    max={sliderMax}
+                    max={totalFrames - 1} // Ensure slider range matches animation frames
                     sx={{ width: "100%" }}
                 />
                 <h2 className="font-bold">

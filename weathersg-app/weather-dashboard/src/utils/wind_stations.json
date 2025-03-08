@@ -250,5 +250,14 @@
             "latitude": 1.4172,
             "longitude": 103.74855
         }
+    },
+    {
+        "id": "S102",
+        "deviceId": "S102",
+        "name": "Semakau Landfill",
+        "location": {
+            "latitude": 1.189,
+            "longitude": 103.768
+        }
     }
 ]

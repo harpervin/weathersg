@@ -43,7 +43,7 @@ const CenterButton: React.FC = () => {
                 position: "absolute",
                 top: "10px",
                 right: "10px",
-                zIndex: 1000,
+                zIndex: 100009,
                 padding: "8px 12px",
                 backgroundColor: "#007bff",
                 color: "#fff",
@@ -123,15 +123,17 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             if (!groupedHumidityData[timestamp]) {
                 groupedHumidityData[timestamp] = [];
             }
-
             groupedHumidityData[timestamp].push({
                 stationId: station.stationId,
-                name: matchedStation.name,
+                name: matchedStation?.name ?? "",
                 timestamp: station.timestamp,
                 latitude: matchedStation?.location.latitude ?? 0,
                 longitude: matchedStation?.location.longitude ?? 0,
                 value: station.value,
             });
+            if (!matchedStation) {
+                console.log("Station name is empty: ", station);
+            }
         });
 
         const groupedTemperatureData: Record<string, HistoricalWeatherData[]> =
@@ -241,6 +243,10 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             <DatetimeSlider
                 selectedLayers={selectedLayers}
                 onDataUpdate={handleWeatherDataUpdate}
+                currentFrame={currentFrame}
+                currentTimestamp={currentTimestamp}
+                totalFrames={windData.length} // Ensure total frames match available data
+                setCurrentFrame={setCurrentFrame} // Allow slider to update the frame
             />
 
             <MapContainer
@@ -329,7 +335,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                             fontSize: "18px",
                             fontWeight: "bold",
                             textAlign: "center",
-                            zIndex: 10000,
+                            zIndex: 10005,
                         }}
                     >
                         {currentTimestamp}

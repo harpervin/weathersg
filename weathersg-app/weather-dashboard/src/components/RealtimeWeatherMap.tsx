@@ -80,11 +80,6 @@ const RealtimeWeatherMap: React.FC<MapWithWeatherProps> = ({
 
             const rainfallData = await fetchRainfallData();
             setRainfall(rainfallData);
-
-            console.log(windData);
-            console.log(tempData);
-            console.log(humidityData);
-            console.log(rainfallData);
         };
 
         // Initial load

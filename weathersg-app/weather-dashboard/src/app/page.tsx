@@ -24,7 +24,6 @@ export default function Page() {
     const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
     const [isRainfallMapActive, setIsRainfallMapActive] = useState(false);
     const [isRainfallAreasActive, setIsRainfallAreasActive] = useState(false);
-    const [searchQuery, setSearchQuery] = useState("");
 
     const handleCheckboxChange = (checkedValues: string[]) => {
         if (isRainfallMapActive || isRainfallAreasActive) {
@@ -57,13 +56,12 @@ export default function Page() {
     const tabs: MapTab[] = ["Realtime Weather Map", "Historical Weather Map"];
 
     return (
-        <main className="p-4 flex flex-col space-y-4 overflow-y-auto lg:p-8">
+        <main className="p-4 flex flex-col lg:px-8">
             {/* Header Section */}
             <div className="flex flex-col lg:flex-row justify-between items-center mb-4">
                 <h1 className="text-xl lg:text-2xl font-bold text-center">
                     WeatherSG
                 </h1>
-                <SearchBar query={searchQuery} setQuery={setSearchQuery} />
             </div>
 
             {/* Time Slider */}
@@ -90,7 +88,9 @@ export default function Page() {
                 </div>
 
                 <div className="p-4 bg-gray-100 rounded shadow-lg mt-4 lg:mt-0 lg:ml-4">
-                    <h2 className="text-lg font-semibold mb-2">Wind</h2>
+                    <h1 className="text-lg font-semibold mb-2">Weather Filters</h1>
+                    <hr className="my-2" />
+                    <h2 className="text-md font-semibold mb-2">Wind</h2>
                     <CheckboxGroup
                         options={[
                             {
@@ -111,7 +111,7 @@ export default function Page() {
                         onChange={handleCheckboxChange}
                     />
                     <hr className="my-2" />
-                    <h2 className="text-lg font-semibold mb-2">Air</h2>
+                    <h2 className="text-md font-semibold mb-2">Air</h2>
                     <CheckboxGroup
                         options={[
                             { label: "Air Temperature" },
@@ -127,7 +127,7 @@ export default function Page() {
                         onChange={handleCheckboxChange}
                     />
                     <hr className="my-2" />
-                    <h2 className="text-lg font-semibold mb-2">
+                    <h2 className="text-md font-semibold mb-2">
                         Precipitation
                     </h2>
                     <div className="flex flex-col space-y-2">
@@ -139,7 +139,7 @@ export default function Page() {
                                     : "bg-blue-200 hover:bg-blue-400 hover:text-white"
                             }`}
                         >
-                            All Rainfall Readings
+                            All Readings
                         </button>
 
                         <button
@@ -150,7 +150,7 @@ export default function Page() {
                                     : "bg-blue-200 hover:bg-blue-400 hover:text-white"
                             }`}
                         >
-                            View only areas with rainfall
+                            View areas with rainfall
                         </button>
                     </div>
                 </div>
