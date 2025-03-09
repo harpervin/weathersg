@@ -8,6 +8,7 @@ type HistoricalWindCanvasProps = {
     stationsData: HistoricalWindData[][];
     currentFrame: number;
     windParticleSize: number; // Controls particle size
+    windColor: string; // Controls wind color (e.g., "grey", "blue", "red", "green")
 };
 
 type Particle = {
@@ -22,6 +23,7 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
     stationsData,
     currentFrame,
     windParticleSize,
+    windColor,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
@@ -132,7 +134,7 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             particlesRef.current.forEach((particle) => {
                 ctx.beginPath();
                 ctx.arc(particle.x, particle.y, windParticleSize, 0, 2 * Math.PI);
-                ctx.fillStyle = "rgba(0, 150, 255, 0.7)";
+                ctx.fillStyle = windColor; // Use windColor prop
                 ctx.fill();
             });
         };
@@ -157,7 +159,7 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             map.off("resize", resizeCanvas);
             map.off("zoomend", initializeParticles);
         };
-    }, [map, stationsData, currentFrame, windParticleSize]); // Added `windParticleSize` to dependencies
+    }, [map, stationsData, currentFrame, windParticleSize, windColor]); // ✅ Added windColor as dependency
 
     return (
         <canvas

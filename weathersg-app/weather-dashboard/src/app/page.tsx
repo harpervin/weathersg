@@ -26,6 +26,11 @@ export default function Page() {
     const [isRainfallAreasActive, setIsRainfallAreasActive] = useState(false);
     const [windParticleSize, setWindParticleSize] = useState<number>(1.5); // Default particle size
     const [windDirectionScale, setWindDirectionScale] = useState<number>(1); // Default particle size
+    const [windParticleColor, setWindParticleColor] = useState<string>(
+        "rgba(0, 150, 255, 0.7)"
+    ); // Default color
+    const [rainDisplayMode, setRainDisplayMode] = useState<string>("rectangle");
+    const [rainMapScale, setRainMapScale] = useState<number>(1);
 
     const handleWindParticleSizeChange = (
         event: Event,
@@ -42,6 +47,15 @@ export default function Page() {
     ) => {
         if (typeof value === "number") {
             setWindDirectionScale(value);
+        }
+    };
+
+    const handleRainMapScaleChange = (
+        event: Event,
+        value: number | number[]
+    ) => {
+        if (typeof value === "number") {
+            setRainMapScale(value);
         }
     };
 
@@ -120,6 +134,9 @@ export default function Page() {
                                 selectedLayers={selectedLayers}
                                 windParticleSize={windParticleSize}
                                 windDirectionScale={windDirectionScale}
+                                windParticleColor={windParticleColor}
+                                rainDisplayMode={rainDisplayMode}
+                                rainMapScale={rainMapScale}
                             />
                         </>
                     )}
@@ -220,6 +237,7 @@ export default function Page() {
                             value={selectedLayers}
                             onChange={handleHistoricalCheckboxChange}
                         />
+
                         {selectedLayers.includes("Windstream") && (
                             <div className="my-2">
                                 <h3 className="text-sm font-semibold">
@@ -233,6 +251,28 @@ export default function Page() {
                                     onChange={handleWindParticleSizeChange}
                                     valueLabelDisplay="auto"
                                 />
+
+                                <h3 className="text-sm font-semibold mt-2">
+                                    Windstream Particle Color
+                                </h3>
+                                <select
+                                    value={windParticleColor}
+                                    onChange={(e) =>
+                                        setWindParticleColor(e.target.value)
+                                    }
+                                    className="p-2 rounded border border-gray-300 bg-white"
+                                >
+                                    <option value="rgba(0, 150, 255, 0.7)">
+                                        Blue
+                                    </option>
+                                    <option value="rgba(255, 0, 0, 0.7)">
+                                        Red
+                                    </option>
+                                    <option value="rgba(0, 255, 0, 0.8)">
+                                        Green
+                                    </option>
+                                    <option value="grey">Grey</option>
+                                </select>
                             </div>
                         )}
 
@@ -273,6 +313,43 @@ export default function Page() {
                                 onChange={handleHistoricalRainfallSelection}
                             />
                         </div>
+                        {selectedLayers.includes("Rainfall") && (
+                            <div className="my-2">
+                                <h3 className="text-sm font-semibold">
+                                    Rainfall Map Scale
+                                </h3>
+                                <select
+                                    value={rainDisplayMode}
+                                    onChange={(e) =>
+                                        setRainDisplayMode(e.target.value)
+                                    }
+                                    className="p-2 rounded border border-gray-300 bg-white"
+                                >
+                                    <option value="rectangle">
+                                        Measurements
+                                    </option>
+                                    <option value="rainmap">Rain Map</option>
+                                </select>
+
+                                {rainDisplayMode == "rainmap" && (
+                                    <>
+                                        <h3 className="text-sm font-semibold">
+                                            Rain Map Scale
+                                        </h3>
+                                        <Slider
+                                            value={rainMapScale}
+                                            min={0.5}
+                                            max={3}
+                                            step={0.1}
+                                            onChange={
+                                                handleRainMapScaleChange
+                                            }
+                                            valueLabelDisplay="auto"
+                                        />
+                                    </>
+                                )}
+                            </div>
+                        )}
                     </div>
                 )}
             </div>

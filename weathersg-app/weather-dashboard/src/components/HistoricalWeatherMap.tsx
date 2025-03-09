@@ -26,8 +26,11 @@ import rainfallStations from "../utils/rainfall_stations.json";
 
 type MapWithWeatherProps = {
     selectedLayers: string[];
-    windParticleSize: number; 
+    windParticleSize: number;
     windDirectionScale: number;
+    windParticleColor: string;
+    rainDisplayMode: string;
+    rainMapScale: number;
 };
 
 const CenterButton: React.FC = () => {
@@ -63,7 +66,10 @@ const CenterButton: React.FC = () => {
 const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     selectedLayers,
     windParticleSize,
-    windDirectionScale
+    windDirectionScale,
+    windParticleColor,
+    rainDisplayMode,
+    rainMapScale
 }) => {
     const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
     const [humidityData, setHumidityData] = useState<HistoricalWeatherData[][]>(
@@ -87,18 +93,19 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     const formatTimestamp = (timestamp: string) => {
         if (!timestamp) return "";
         const date = new Date(timestamp);
-    
-        return date.toLocaleString("en-SG", {
-            day: "2-digit",
-            month: "long", // Full month name (e.g., June)
-            year: "numeric",
-            hour: "2-digit",
-            minute: "2-digit",
-            hour12: false, // Use 24-hour format
-            timeZone: "Asia/Singapore", // Ensure Singapore Time
-        }).replace(",", ""); // Remove the comma
+
+        return date
+            .toLocaleString("en-SG", {
+                day: "2-digit",
+                month: "long", // Full month name (e.g., June)
+                year: "numeric",
+                hour: "2-digit",
+                minute: "2-digit",
+                hour12: false, // Use 24-hour format
+                timeZone: "Asia/Singapore", // Ensure Singapore Time
+            })
+            .replace(",", ""); // Remove the comma
     };
-    
 
     const handleWeatherDataUpdate = (data: {
         windData: HistoricalWindData[];
@@ -259,7 +266,6 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
         }
         setCurrentTimestamp(formatTimestamp(newTimestamp));
 
-
         // Set interval to update timestamp over time
         const interval = setInterval(() => {
             setCurrentFrame((prevFrame) => {
@@ -336,9 +342,8 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                             stationsData={windData}
                             // rainfallData={rainfallData}
                             currentFrame={currentFrame}
-                            windParticleSize={windParticleSize} 
-                            
-
+                            windParticleSize={windParticleSize}
+                            windColor={windParticleColor}
                         />
                     )}
                 {selectedLayers.includes("Wind Direction") &&
@@ -381,6 +386,8 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                         <HistoricalRainfallAreasCanvas
                             stationsData={rainfallData}
                             currentFrame={currentFrame}
+                            displayMode={rainDisplayMode}
+                            rainMapScale={rainMapScale}
                         />
                     )}
 
