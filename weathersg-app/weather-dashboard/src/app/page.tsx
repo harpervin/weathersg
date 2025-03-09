@@ -1,9 +1,9 @@
 "use client";
 import dynamic from "next/dynamic";
 import { useEffect, useState } from "react";
+import Slider from "@mui/material/Slider";
 
 import CheckboxGroup from "@/components/CheckboxGroup";
-import SearchBar from "@/components/SearchBar";
 import Tabs from "@/components/Tabs";
 
 const RealtimeWeatherMap = dynamic(
@@ -15,7 +15,7 @@ const RealtimeWeatherMap = dynamic(
 const HistoricalWeatherMap = dynamic(
     () => import("../components/HistoricalWeatherMap"),
     { ssr: false }
-  );
+);
 
 type MapTab = "Realtime Weather Map" | "Historical Weather Map";
 
@@ -24,6 +24,26 @@ export default function Page() {
     const [selectedLayers, setSelectedLayers] = useState<string[]>([]);
     const [isRainfallMapActive, setIsRainfallMapActive] = useState(false);
     const [isRainfallAreasActive, setIsRainfallAreasActive] = useState(false);
+    const [windParticleSize, setWindParticleSize] = useState<number>(1.5); // Default particle size
+    const [windDirectionScale, setWindDirectionScale] = useState<number>(1); // Default particle size
+
+    const handleWindParticleSizeChange = (
+        event: Event,
+        value: number | number[]
+    ) => {
+        if (typeof value === "number") {
+            setWindParticleSize(value);
+        }
+    };
+
+    const handleWindDirectionScaleChange = (
+        event: Event,
+        value: number | number[]
+    ) => {
+        if (typeof value === "number") {
+            setWindDirectionScale(value);
+        }
+    };
 
     const handleCheckboxChange = (checkedValues: string[]) => {
         if (isRainfallMapActive || isRainfallAreasActive) {
@@ -53,6 +73,27 @@ export default function Page() {
         setIsRainfallMapActive(false);
     };
 
+    const handleHistoricalCheckboxChange = (checkedValues: string[]) => {
+        if (checkedValues.includes("Rainfall") && checkedValues.length === 1) {
+            // If "Rainfall" is the only selected option, keep it
+            setSelectedLayers(["Rainfall"]);
+        } else {
+            // If any other checkbox is selected, remove "Rainfall" and keep only the selected ones
+            setSelectedLayers(
+                checkedValues.filter((layer) => layer !== "Rainfall")
+            );
+        }
+    };
+
+    // Helper function to handle Rainfall selection
+    const handleHistoricalRainfallSelection = () => {
+        setSelectedLayers(["Rainfall"]);
+    };
+
+    useEffect(() => {
+        console.log(selectedLayers);
+    }, [selectedLayers]);
+
     const tabs: MapTab[] = ["Realtime Weather Map", "Historical Weather Map"];
 
     return (
@@ -77,7 +118,8 @@ export default function Page() {
                         <>
                             <HistoricalWeatherMap
                                 selectedLayers={selectedLayers}
-                                
+                                windParticleSize={windParticleSize}
+                                windDirectionScale={windDirectionScale}
                             />
                         </>
                     )}
@@ -86,85 +128,154 @@ export default function Page() {
                         <RealtimeWeatherMap selectedLayers={selectedLayers} />
                     )}
                 </div>
+                {activeTab == "Realtime Weather Map" && (
+                    <div className="p-4 bg-gray-100 rounded shadow-lg mt-4 lg:mt-0 lg:ml-4">
+                        <h1 className="text-lg font-semibold mb-2">
+                            Weather Filters
+                        </h1>
+                        <hr className="my-2" />
+                        <h2 className="text-md font-semibold mb-2">Wind</h2>
+                        <CheckboxGroup
+                            options={[
+                                {
+                                    label: "Windstream",
+                                    tooltip:
+                                        "Displays windstream based on station readings over Singapore only.",
+                                },
+                                { label: "Wind Direction" },
+                                { label: "Wind Speed" },
+                            ]}
+                            value={selectedLayers.filter(
+                                (layer) =>
+                                    ![
+                                        "AllRainfallReadings",
+                                        "RainfallAreas",
+                                    ].includes(layer)
+                            )}
+                            onChange={handleCheckboxChange}
+                        />
+                        <hr className="my-2" />
+                        <h2 className="text-md font-semibold mb-2">Air</h2>
+                        <CheckboxGroup
+                            options={[
+                                { label: "Air Temperature" },
+                                { label: "Humidity" },
+                            ]}
+                            value={selectedLayers.filter(
+                                (layer) =>
+                                    ![
+                                        "AllRainfallReadings",
+                                        "RainfallAreas",
+                                    ].includes(layer)
+                            )}
+                            onChange={handleCheckboxChange}
+                        />
+                        <hr className="my-2" />
 
-                <div className="p-4 bg-gray-100 rounded shadow-lg mt-4 lg:mt-0 lg:ml-4">
-                    <h1 className="text-lg font-semibold mb-2">Weather Filters</h1>
-                    <hr className="my-2" />
-                    <h2 className="text-md font-semibold mb-2">Wind</h2>
-                    <CheckboxGroup
-                        options={[
-                            {
-                                label: "Windstream",
-                                tooltip:
-                                    "Displays windstream based on station readings over Singapore only.",
-                            },
-                            { label: "Wind Direction" },
-                            { label: "Wind Speed" },
-                        ]}
-                        value={selectedLayers.filter(
-                            (layer) =>
-                                ![
-                                    "AllRainfallReadings",
-                                    "RainfallAreas",
-                                ].includes(layer)
-                        )}
-                        onChange={handleCheckboxChange}
-                    />
-                    <hr className="my-2" />
-                    <h2 className="text-md font-semibold mb-2">Air</h2>
-                    <CheckboxGroup
-                        options={[
-                            { label: "Air Temperature" },
-                            { label: "Humidity" },
-                        ]}
-                        value={selectedLayers.filter(
-                            (layer) =>
-                                ![
-                                    "AllRainfallReadings",
-                                    "RainfallAreas",
-                                ].includes(layer)
-                        )}
-                        onChange={handleCheckboxChange}
-                    />
-                    <hr className="my-2" />
-                    <h2 className="text-md font-semibold mb-2">
-                        Precipitation
-                    </h2>
-                    <div className="flex flex-col space-y-2">
-                        <button
-                            onClick={handleRainfallMapBtnClick}
-                            className={`px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
-                                isRainfallMapActive
-                                    ? "bg-blue-400 text-white"
-                                    : "bg-blue-200 hover:bg-blue-400 hover:text-white"
-                            }`}
-                        >
-                            All Readings
-                        </button>
+                        <h2 className="text-md font-semibold mb-2">
+                            Precipitation
+                        </h2>
+                        <div className="flex flex-col space-y-2">
+                            <button
+                                onClick={handleRainfallMapBtnClick}
+                                className={`px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
+                                    isRainfallMapActive
+                                        ? "bg-blue-400 text-white"
+                                        : "bg-blue-200 hover:bg-blue-400 hover:text-white"
+                                }`}
+                            >
+                                All Readings
+                            </button>
 
-                        <button
-                            onClick={handleRainfallAreasBtnClick}
-                            className={`px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
-                                isRainfallAreasActive
-                                    ? "bg-blue-400 text-white"
-                                    : "bg-blue-200 hover:bg-blue-400 hover:text-white"
-                            }`}
-                        >
-                            View areas with rainfall
-                        </button>
+                            <button
+                                onClick={handleRainfallAreasBtnClick}
+                                className={`px-4 py-2 rounded-full font-semibold transition-colors duration-300 ${
+                                    isRainfallAreasActive
+                                        ? "bg-blue-400 text-white"
+                                        : "bg-blue-200 hover:bg-blue-400 hover:text-white"
+                                }`}
+                            >
+                                View areas with rainfall
+                            </button>
+                        </div>
                     </div>
-                </div>
+                )}
+                {activeTab == "Historical Weather Map" && (
+                    <div className="p-4 bg-gray-100 rounded shadow-lg mt-4 lg:mt-0 lg:ml-4">
+                        <h1 className="text-lg font-semibold mb-2">
+                            Weather Filters
+                        </h1>
+                        <hr className="my-2" />
+                        <h2 className="text-md font-semibold mb-2">Wind</h2>
+                        <CheckboxGroup
+                            options={[
+                                {
+                                    label: "Windstream",
+                                    tooltip:
+                                        "Displays windstream based on station readings over Singapore only.",
+                                },
+                                { label: "Wind Direction" },
+                                { label: "Wind Speed" },
+                            ]}
+                            value={selectedLayers}
+                            onChange={handleHistoricalCheckboxChange}
+                        />
+                        {selectedLayers.includes("Windstream") && (
+                            <div className="my-2">
+                                <h3 className="text-sm font-semibold">
+                                    Windstream Particle Size
+                                </h3>
+                                <Slider
+                                    value={windParticleSize}
+                                    min={1}
+                                    max={3}
+                                    step={0.1}
+                                    onChange={handleWindParticleSizeChange}
+                                    valueLabelDisplay="auto"
+                                />
+                            </div>
+                        )}
+
+                        {selectedLayers.includes("Wind Direction") && (
+                            <div className="my-2">
+                                <h3 className="text-sm font-semibold">
+                                    Wind Direction Scale
+                                </h3>
+                                <Slider
+                                    value={windDirectionScale}
+                                    min={1}
+                                    max={10}
+                                    step={0.1}
+                                    onChange={handleWindDirectionScaleChange}
+                                    valueLabelDisplay="auto"
+                                />
+                            </div>
+                        )}
+                        <hr className="my-2" />
+                        <h2 className="text-md font-semibold mb-2">Air</h2>
+                        <CheckboxGroup
+                            options={[
+                                { label: "Air Temperature" },
+                                { label: "Humidity" },
+                            ]}
+                            value={selectedLayers}
+                            onChange={handleHistoricalCheckboxChange}
+                        />
+                        <hr className="my-2" />
+
+                        <h2 className="text-md font-semibold mb-2">
+                            Precipitation
+                        </h2>
+                        <div className="flex flex-col space-y-2">
+                            <CheckboxGroup
+                                options={[{ label: "Rainfall" }]}
+                                value={selectedLayers}
+                                onChange={handleHistoricalRainfallSelection}
+                            />
+                        </div>
+                    </div>
+                )}
             </div>
-
-            {/* <hr className="my-2" /> */}
-
-            {/* Tabbed Bar Chart Section */}
-            {/* <div>
-                <h2 className="text-xl lg:text-2xl font-bold mb-4 text-center lg:text-left">
-                    Weather Data Visualization (2022-2024)
-                </h2>
-                <WeatherChartTabs />
-            </div> */}
         </main>
     );
 }

@@ -7,11 +7,13 @@ import { HistoricalWindData } from "@/utils/historicalWeatherData";
 type HistoricalWindCanvasProps = {
     stationsData: HistoricalWindData[][];
     currentFrame: number; // Synchronized frame from parent
+    sizeScale?: number; // Controls arrow size (length, thickness, arrowhead)
 };
 
 const HistoricalWindDirectionCanvas: React.FC<HistoricalWindCanvasProps> = ({
     stationsData,
     currentFrame,
+    sizeScale = 10, // Default scaling factor
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
@@ -37,7 +39,6 @@ const HistoricalWindDirectionCanvas: React.FC<HistoricalWindCanvasProps> = ({
             const stations = stationsData[currentFrame] || [];
 
             stations.forEach((station) => {
-                // Convert station latitude and longitude to canvas pixel positions
                 const point = map.latLngToContainerPoint([
                     station.latitude,
                     station.longitude,
@@ -46,33 +47,47 @@ const HistoricalWindDirectionCanvas: React.FC<HistoricalWindCanvasProps> = ({
                 const y = point.y + 10;
 
                 const radians = Math.atan2(station.u, station.v);
-                const length = 20; // Arrow length
+
+                // Scale everything using sizeScale
+                const baseSize = 10;
+                const length = baseSize + station.speed * sizeScale;
+                const thickness = Math.max(1, station.speed * (sizeScale / 10)); // Avoid 0 thickness
+                const arrowheadSize = length / 4; // Keep arrowhead proportional
+
+                // Limit max values to avoid excessive sizes
+                const maxArrowLength = 60;
+                const maxThickness = 6;
+                const maxArrowheadSize = 18;
+
+                const finalLength = Math.min(length, maxArrowLength);
+                const finalThickness = Math.min(thickness, maxThickness);
+                const finalArrowheadSize = Math.min(arrowheadSize, maxArrowheadSize);
 
                 // Draw arrow body
                 ctx.beginPath();
                 ctx.moveTo(x, y);
                 ctx.lineTo(
-                    x + length * Math.sin(radians),
-                    y - length * Math.cos(radians)
+                    x + (finalLength - finalArrowheadSize) * Math.sin(radians),
+                    y - (finalLength - finalArrowheadSize) * Math.cos(radians)
                 );
                 ctx.strokeStyle = "rgba(0, 0, 0, 0.8)";
-                ctx.lineWidth = 2;
+                ctx.lineWidth = finalThickness;
                 ctx.stroke();
 
                 // Draw arrowhead
+                const arrowTipX = x + finalLength * Math.sin(radians);
+                const arrowTipY = y - finalLength * Math.cos(radians);
+
+                const arrowLeftX = x + (finalLength - finalArrowheadSize) * Math.sin(radians + Math.PI / 7);
+                const arrowLeftY = y - (finalLength - finalArrowheadSize) * Math.cos(radians + Math.PI / 7);
+
+                const arrowRightX = x + (finalLength - finalArrowheadSize) * Math.sin(radians - Math.PI / 7);
+                const arrowRightY = y - (finalLength - finalArrowheadSize) * Math.cos(radians - Math.PI / 7);
+
                 ctx.beginPath();
-                ctx.moveTo(
-                    x + length * Math.sin(radians),
-                    y - length * Math.cos(radians)
-                );
-                ctx.lineTo(
-                    x + (length - 5) * Math.sin(radians + Math.PI / 6),
-                    y - (length - 5) * Math.cos(radians + Math.PI / 6)
-                );
-                ctx.lineTo(
-                    x + (length - 5) * Math.sin(radians - Math.PI / 6),
-                    y - (length - 5) * Math.cos(radians - Math.PI / 6)
-                );
+                ctx.moveTo(arrowTipX, arrowTipY);
+                ctx.lineTo(arrowLeftX, arrowLeftY);
+                ctx.lineTo(arrowRightX, arrowRightY);
                 ctx.closePath();
                 ctx.fillStyle = "rgba(0, 0, 0, 0.8)";
                 ctx.fill();
@@ -90,7 +105,7 @@ const HistoricalWindDirectionCanvas: React.FC<HistoricalWindCanvasProps> = ({
             cancelAnimationFrame(animationRef.current!);
             map.off("resize", resizeCanvas);
         };
-    }, [map, stationsData, currentFrame]);
+    }, [map, stationsData, currentFrame, sizeScale]); // Ensure re-render on sizeScale change
 
     return (
         <canvas

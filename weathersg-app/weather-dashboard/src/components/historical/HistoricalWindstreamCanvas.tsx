@@ -5,25 +5,28 @@ import { useMap } from "react-leaflet";
 import { HistoricalWindData } from "@/utils/historicalWeatherData";
 
 type HistoricalWindCanvasProps = {
-    stationsData: HistoricalWindData[][]; // Array of station data at different timestamps
-    currentFrame: number; // Synchronized frame from parent
+    stationsData: HistoricalWindData[][];
+    currentFrame: number;
+    windParticleSize: number; // Controls particle size
 };
 
-type NearestStationAccumulator = {
-    station: HistoricalWindData | null;
-    distance: number;
+type Particle = {
+    x: number;
+    y: number;
+    lat: number;
+    lng: number;
+    life: number;
 };
 
 const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
     stationsData,
     currentFrame,
+    windParticleSize,
 }) => {
     const canvasRef = useRef<HTMLCanvasElement | null>(null);
     const map = useMap();
     const animationRef = useRef<number | null>(null);
-    const particlesRef = useRef<
-        { x: number; y: number; lat: number; lng: number; life: number }[]
-    >([]);
+    const particlesRef = useRef<Particle[]>([]);
     const MAX_PARTICLES = 5000;
 
     // Define Singapore's geographical bounds
@@ -79,7 +82,10 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             const stations = stationsData[currentFrame] || [];
 
             particlesRef.current.forEach((particle) => {
-                const nearestStation = stations.reduce<NearestStationAccumulator>(
+                const nearestStation = stations.reduce<{
+                    station: HistoricalWindData | null;
+                    distance: number;
+                }>(
                     (nearest, s) => {
                         const distance = Math.sqrt(
                             Math.pow(particle.lat - s.latitude, 2) +
@@ -125,7 +131,7 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             ctx.clearRect(0, 0, canvas.width, canvas.height);
             particlesRef.current.forEach((particle) => {
                 ctx.beginPath();
-                ctx.arc(particle.x, particle.y, 2, 0, 2 * Math.PI);
+                ctx.arc(particle.x, particle.y, windParticleSize, 0, 2 * Math.PI);
                 ctx.fillStyle = "rgba(0, 150, 255, 0.7)";
                 ctx.fill();
             });
@@ -151,7 +157,7 @@ const HistoricalWindstreamCanvas: React.FC<HistoricalWindCanvasProps> = ({
             map.off("resize", resizeCanvas);
             map.off("zoomend", initializeParticles);
         };
-    }, [map, stationsData, currentFrame]);
+    }, [map, stationsData, currentFrame, windParticleSize]); // Added `windParticleSize` to dependencies
 
     return (
         <canvas

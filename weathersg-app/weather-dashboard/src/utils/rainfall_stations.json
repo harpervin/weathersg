@@ -700,5 +700,41 @@
             "latitude": 1.3382,
             "longitude": 103.8657
         }
+    },
+    {
+        "id": "S202",
+        "deviceId": "S202",
+        "name": "S202",
+        "location": {
+            "latitude": 1.30968,
+            "longitude": 103.7578
+        }
+    },
+    {
+        "id": "S204",
+        "deviceId": "S204",
+        "name": "S204",
+        "location": {
+            "latitude": 1.40081,
+            "longitude": 103.88217
+        }
+    },
+    {
+        "id": "S205",
+        "deviceId": "S205",
+        "name": "S205",
+        "location": {
+            "latitude": 1.38829,
+            "longitude": 103.9116
+        }
+    },
+    {
+        "id": "S212",
+        "deviceId": "S212",
+        "name": "S212",
+        "location": {
+            "latitude": 1.31835,
+            "longitude": 103.93574
+        }
     }
 ]

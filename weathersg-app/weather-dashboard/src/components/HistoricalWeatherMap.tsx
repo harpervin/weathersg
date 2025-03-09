@@ -8,8 +8,7 @@ import HistoricalWindDirectionCanvas from "./historical/HistoricalWindDirectionC
 import HistoricalWindSpeedCanvas from "./historical/HistoricalWindSpeedCanvas";
 import HistoricalAirTemperatureCanvas from "./historical/HistoricalAirTemperatureCanvas";
 import HistoricalHumidityCanvas from "./historical/HistoricalHumidityCanvas";
-import RealtimeRainfallReadingsCanvas from "./realtime/RealtimeRainfallReadingsCanvas";
-import RealtimeRainfallAreasCanvas from "./realtime/RealtimeRainfallAreasCanvas";
+import HistoricalRainfallAreasCanvas from "./historical/HistoricalRainfallAreasCanvas";
 import MapTextOverlay from "./MapTextOverlay";
 import useScreenSize from "@/hooks/useScreenSize";
 import DatetimeSlider from "@/components/DatetimeSlider";
@@ -27,6 +26,8 @@ import rainfallStations from "../utils/rainfall_stations.json";
 
 type MapWithWeatherProps = {
     selectedLayers: string[];
+    windParticleSize: number; 
+    windDirectionScale: number;
 };
 
 const CenterButton: React.FC = () => {
@@ -61,6 +62,8 @@ const CenterButton: React.FC = () => {
 
 const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     selectedLayers,
+    windParticleSize,
+    windDirectionScale
 }) => {
     const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
     const [humidityData, setHumidityData] = useState<HistoricalWeatherData[][]>(
@@ -76,16 +79,41 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     const [currentFrame, setCurrentFrame] = useState(0);
     const [timestampDuration, setTimestampDuration] = useState(3000);
     const [currentTimestamp, setCurrentTimestamp] = useState("");
+    const [maxFrames, setMaxFrames] = useState(0);
 
     const isSmallScreen = useScreenSize();
     const zoomLevel = isSmallScreen ? 10 : 11;
+
+    const formatTimestamp = (timestamp: string) => {
+        if (!timestamp) return "";
+        const date = new Date(timestamp);
+    
+        return date.toLocaleString("en-SG", {
+            day: "2-digit",
+            month: "long", // Full month name (e.g., June)
+            year: "numeric",
+            hour: "2-digit",
+            minute: "2-digit",
+            hour12: false, // Use 24-hour format
+            timeZone: "Asia/Singapore", // Ensure Singapore Time
+        }).replace(",", ""); // Remove the comma
+    };
+    
 
     const handleWeatherDataUpdate = (data: {
         windData: HistoricalWindData[];
         temperatureData: HistoricalWeatherData[];
         humidityData: HistoricalWeatherData[];
-        rainfallData: StationRainfallData[];
+        rainfallData: HistoricalWeatherData[];
     }) => {
+        const rainfallStationsLookup = rainfallStations.reduce(
+            (acc, station) => {
+                acc[station.id.trim()] = station; // Normalize ID
+                return acc;
+            },
+            {} as Record<string, (typeof rainfallStations)[0]>
+        );
+
         const stationLookup = windStations.reduce((acc, station) => {
             acc[station.id.trim()] = station; // Normalize ID
             return acc;
@@ -157,6 +185,30 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             });
         });
 
+        const groupedRainfallData: Record<string, HistoricalWeatherData[]> = {};
+        data.rainfallData.forEach((station) => {
+            const matchedStation = rainfallStationsLookup[station.stationId];
+
+            const timestamp = station.timestamp;
+
+            if (!groupedRainfallData[timestamp]) {
+                groupedRainfallData[timestamp] = [];
+            }
+
+            if (!matchedStation) {
+                console.log("Station name is empty: ", station);
+            }
+
+            groupedRainfallData[timestamp].push({
+                stationId: station.stationId,
+                name: matchedStation?.name,
+                timestamp: station.timestamp,
+                latitude: matchedStation?.location.latitude ?? 0,
+                longitude: matchedStation?.location.longitude ?? 0,
+                value: station.value,
+            });
+        });
+
         const sortedTimestamps = Object.keys(groupedWindData).sort();
         const formattedWindData: HistoricalWindData[][] = sortedTimestamps.map(
             (timestamp) => groupedWindData[timestamp]
@@ -175,9 +227,17 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                 (timestamp) => groupedTemperatureData[timestamp]
             );
 
+        const sortedRainfallTimestamps =
+            Object.keys(groupedRainfallData).sort();
+        const formattedRainfallData: HistoricalWeatherData[][] =
+            sortedRainfallTimestamps.map(
+                (timestamp) => groupedRainfallData[timestamp]
+            );
+
         setWindData(formattedWindData);
         setHumidityData(formattedHumidityData);
         setTemperatureData(formattedTemperatureData);
+        setRainfallData(formattedRainfallData);
     };
 
     useEffect(() => {
@@ -186,7 +246,6 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             setCurrentTimestamp("");
             return;
         }
-
         // Ensure the timestamp updates immediately when data is available
         let newTimestamp = "";
         if (windData[currentFrame]?.[0]?.timestamp) {
@@ -195,8 +254,11 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             newTimestamp = humidityData[currentFrame][0].timestamp;
         } else if (temperatureData[currentFrame]?.[0]?.timestamp) {
             newTimestamp = temperatureData[currentFrame][0].timestamp;
+        } else if (rainfallData[currentFrame]?.[0]?.timestamp) {
+            newTimestamp = rainfallData[currentFrame][0].timestamp;
         }
-        setCurrentTimestamp(newTimestamp);
+        setCurrentTimestamp(formatTimestamp(newTimestamp));
+
 
         // Set interval to update timestamp over time
         const interval = setInterval(() => {
@@ -204,10 +266,12 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                 const windLength = windData.length;
                 const humidityLength = humidityData.length;
                 const tempLength = temperatureData.length;
+                const rainfallLength = rainfallData.length;
                 const maxFrames = Math.max(
                     windLength,
                     humidityLength,
-                    tempLength
+                    tempLength,
+                    rainfallLength
                 );
 
                 if (maxFrames === 0) return prevFrame; // Prevent division by zero
@@ -221,9 +285,13 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                     updatedTimestamp = humidityData[newFrame][0].timestamp;
                 } else if (temperatureData[newFrame]?.[0]?.timestamp) {
                     updatedTimestamp = temperatureData[newFrame][0].timestamp;
+                } else if (rainfallData[newFrame]?.[0]?.timestamp) {
+                    updatedTimestamp = rainfallData[newFrame][0].timestamp;
                 }
 
-                setCurrentTimestamp(updatedTimestamp);
+                setCurrentTimestamp(formatTimestamp(updatedTimestamp));
+                setMaxFrames(maxFrames);
+
                 return newFrame;
             });
         }, timestampDuration);
@@ -233,6 +301,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
         selectedLayers, // Trigger update when layers are selected/deselected
         windData,
         humidityData,
+        rainfallData,
         temperatureData,
         timestampDuration,
         currentFrame,
@@ -245,7 +314,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                 onDataUpdate={handleWeatherDataUpdate}
                 currentFrame={currentFrame}
                 currentTimestamp={currentTimestamp}
-                totalFrames={windData.length} // Ensure total frames match available data
+                totalFrames={maxFrames} // Ensure total frames match available data
                 setCurrentFrame={setCurrentFrame} // Allow slider to update the frame
             />
 
@@ -265,7 +334,11 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                     windData.length > 0 && (
                         <HistoricalWindstreamCanvas
                             stationsData={windData}
+                            // rainfallData={rainfallData}
                             currentFrame={currentFrame}
+                            windParticleSize={windParticleSize} 
+                            
+
                         />
                     )}
                 {selectedLayers.includes("Wind Direction") &&
@@ -273,6 +346,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                         <HistoricalWindDirectionCanvas
                             stationsData={windData}
                             currentFrame={currentFrame}
+                            sizeScale={windDirectionScale}
                         />
                     )}
                 {selectedLayers.includes("Wind Speed") &&
@@ -301,13 +375,14 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                         <RealtimeRainfallReadingsCanvas
                             stationsData={rainfallData}
                         />
-                    )}
-                {selectedLayers.includes("RainfallAreas") &&
-                    rainfallData.length > 0 && (
-                        <RealtimeRainfallAreasCanvas
-                            stationsData={rainfallData}
-                        />
                     )} */}
+                {selectedLayers.includes("Rainfall") &&
+                    rainfallData.length > 0 && (
+                        <HistoricalRainfallAreasCanvas
+                            stationsData={rainfallData}
+                            currentFrame={currentFrame}
+                        />
+                    )}
 
                 <MapTextOverlay
                     position={[1.3521, 103.8198]}

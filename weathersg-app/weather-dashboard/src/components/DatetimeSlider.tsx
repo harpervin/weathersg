@@ -27,7 +27,7 @@ const DatetimeSlider: React.FC<{
         windData: HistoricalWindData[];
         temperatureData: HistoricalWeatherData[];
         humidityData: HistoricalWeatherData[];
-        rainfallData: StationRainfallData[];
+        rainfallData: HistoricalWeatherData[];
     }) => void;
     currentFrame: number;
     currentTimestamp: string;
@@ -86,6 +86,7 @@ const DatetimeSlider: React.FC<{
 
     const [loading, setLoading] = useState<boolean>(false);
     const [missingParams, setMissingParams] = useState<String>("");
+    const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
     const tableMap: Record<string, string> = {
         Windstream: "wind_combined",
@@ -93,12 +94,24 @@ const DatetimeSlider: React.FC<{
         "Wind Speed": "wind_combined",
         "Air Temperature": "air_temperature",
         Humidity: "relative_humidity",
+        Rainfall: "rainfall",
     };
 
     useEffect(() => {
+        const windOptions = ["Windstream", "Wind Direction", "Wind Speed"];
         const mappedTables = [
             ...new Set(selectedLayers.map((prop) => tableMap[prop])),
         ];
+
+        // Check if any wind option is selected
+        const hasWindSelected = selectedLayers.some((layer) =>
+            windOptions.includes(layer)
+        );
+
+        if (hasWindSelected && !mappedTables.includes("rainfall")) {
+            mappedTables.push("rainfall"); // Ensure "rainfall" is included
+        }
+
         setTablesToQuery(mappedTables);
     }, [selectedLayers]);
 
@@ -107,8 +120,8 @@ const DatetimeSlider: React.FC<{
         const startDate = today.startOf("day");
         const endDate = today.endOf("day");
 
-        setStartTime("2021-01-01 00:00");
-        setEndTime("2023-12-31 23:59");
+        setStartTime("2021-01-10 00:00");
+        setEndTime("2021-01-10 23:59");
     }, []);
 
     useEffect(() => {
@@ -175,6 +188,8 @@ const DatetimeSlider: React.FC<{
 
         setMissingParams("");
         setLoading(true);
+        setIsPlaying(false); // Prevent slider from showing until data is fetched
+
         try {
             console.log("Fetching data for tables:", tablesToQuery);
 
@@ -219,6 +234,7 @@ const DatetimeSlider: React.FC<{
             // ✅ Pass the data to parent component
             onDataUpdate(weatherData);
             setLoading(false);
+            setIsPlaying(true);
             return weatherData; // Return structured weather data
         } catch (error) {
             console.error("Error fetching weather data:", error);
@@ -236,28 +252,50 @@ const DatetimeSlider: React.FC<{
                     sx={{ alignItems: "center", width: "100%", mx: "auto" }}
                 >
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        {/* Start Date Picker */}
                         <DateTimePicker
                             label="Start Date/Time"
                             value={dayjs(startTime)}
-                            onChange={(newValue) =>
-                                setStartTime(
-                                    newValue?.format("YYYY-MM-DD HH:mm") || ""
-                                )
-                            }
+                            onChange={(newValue) => {
+                                if (newValue) {
+                                    setStartTime(
+                                        newValue.format("YYYY-MM-DD HH:mm")
+                                    );
+
+                                    // Ensure end date is always after start date
+                                    if (dayjs(newValue).isAfter(endTime)) {
+                                        setEndTime(
+                                            newValue
+                                                .add(1, "minute")
+                                                .format("YYYY-MM-DD HH:mm")
+                                        );
+                                    }
+                                }
+                            }}
                             format="DD/MM/YYYY HH:mm"
+                            minDate={dayjs("2021-01-01")}
+                            maxDate={dayjs("2024-12-31")}
                         />
                     </LocalizationProvider>
                     <h2 className="font-bold">–</h2>
                     <LocalizationProvider dateAdapter={AdapterDayjs}>
+                        {/* End Date Picker */}
                         <DateTimePicker
                             label="End Date/Time"
                             value={dayjs(endTime)}
-                            onChange={(newValue) =>
-                                setEndTime(
-                                    newValue?.format("YYYY-MM-DD HH:mm") || ""
-                                )
-                            }
+                            onChange={(newValue) => {
+                                if (
+                                    newValue &&
+                                    dayjs(newValue).isAfter(startTime)
+                                ) {
+                                    setEndTime(
+                                        newValue.format("YYYY-MM-DD HH:mm")
+                                    );
+                                }
+                            }}
                             format="DD/MM/YYYY HH:mm"
+                            minDate={dayjs(startTime).add(1, "minute")} // Dynamically updates based on start date
+                            maxDate={dayjs("2024-12-31")}
                         />
                     </LocalizationProvider>
                 </Stack>
@@ -434,26 +472,28 @@ const DatetimeSlider: React.FC<{
                 )}
             </div>
 
-            <hr />
-
-            {/* Slider */}
-            <div className="my-2">
-                <h2 className="font-bold">View weather at this time:</h2>
-                <Slider
-                    aria-label="Time Range"
-                    value={sliderValue}
-                    onChange={handleSliderChange}
-                    valueLabelDisplay="auto"
-                    valueLabelFormat={() => currentTimestamp}
-                    step={1}
-                    min={0}
-                    max={totalFrames - 1} // Ensure slider range matches animation frames
-                    sx={{ width: "100%" }}
-                />
-                <h2 className="font-bold">
-                    Selected Time: {readableStartTime}
-                </h2>
-            </div>
+            {/* Slider - Only Show When Animation is Playing */}
+            {isPlaying && (
+                <>
+                    <hr />
+                    <div className="my-2">
+                        <h2 className="font-bold">
+                            View weather at this time:
+                        </h2>
+                        <Slider
+                            aria-label="Time Range"
+                            value={sliderValue}
+                            onChange={handleSliderChange}
+                            valueLabelDisplay="auto"
+                            valueLabelFormat={() => currentTimestamp}
+                            step={1}
+                            min={0}
+                            max={totalFrames - 1} // Ensure slider range matches animation frames
+                            sx={{ width: "100%" }}
+                        />
+                    </div>
+                </>
+            )}
         </div>
     );
 };
