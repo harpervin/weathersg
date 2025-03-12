@@ -23,6 +23,13 @@ import { StationRainfallData } from "@/utils/rainfallData";
 
 import windStations from "../utils/wind_stations.json";
 import rainfallStations from "../utils/rainfall_stations.json";
+import RainfallHeatmapCanvas from "./RainfallHeatmap";
+import dynamic from "next/dynamic";
+
+// ✅ Import RainfallHeatmap without SSR
+const RainfallHeatmap = dynamic(() => import("./RainfallHeatmap"), {
+    ssr: false, // ❌ Prevents Next.js from rendering this component on the server
+});
 
 type MapWithWeatherProps = {
     selectedLayers: string[];
@@ -69,7 +76,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     windDirectionScale,
     windParticleColor,
     rainDisplayMode,
-    rainMapScale
+    rainMapScale,
 }) => {
     const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
     const [humidityData, setHumidityData] = useState<HistoricalWeatherData[][]>(
@@ -254,6 +261,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             return;
         }
         // Ensure the timestamp updates immediately when data is available
+
         let newTimestamp = "";
         if (windData[currentFrame]?.[0]?.timestamp) {
             newTimestamp = windData[currentFrame][0].timestamp;
@@ -382,12 +390,24 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                         />
                     )} */}
                 {selectedLayers.includes("Rainfall") &&
+                    rainDisplayMode !== "heatmap" &&
                     rainfallData.length > 0 && (
                         <HistoricalRainfallAreasCanvas
                             stationsData={rainfallData}
                             currentFrame={currentFrame}
                             displayMode={rainDisplayMode}
                             rainMapScale={rainMapScale}
+                        />
+                    )}
+
+                {selectedLayers.includes("Rainfall") &&
+                    rainDisplayMode === "heatmap" &&
+                    rainfallData.length > 0 && (
+                        <RainfallHeatmap
+                            stationsData={rainfallData}
+                            currentFrame={currentFrame}
+                            maxIntensity={50}
+                            radius={30}
                         />
                     )}
 

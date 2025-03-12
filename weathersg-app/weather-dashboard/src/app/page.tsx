@@ -31,6 +31,7 @@ export default function Page() {
     ); // Default color
     const [rainDisplayMode, setRainDisplayMode] = useState<string>("rectangle");
     const [rainMapScale, setRainMapScale] = useState<number>(1);
+    const [heatmapMode, setHeatmapMode] = useState<string>("snapshot");
 
     const handleWindParticleSizeChange = (
         event: Event,
@@ -329,6 +330,7 @@ export default function Page() {
                                         Measurements
                                     </option>
                                     <option value="rainmap">Rain Map</option>
+                                    <option value="heatmap">Heat Map</option>
                                 </select>
 
                                 {rainDisplayMode == "rainmap" && (
@@ -341,11 +343,33 @@ export default function Page() {
                                             min={0.5}
                                             max={3}
                                             step={0.1}
-                                            onChange={
-                                                handleRainMapScaleChange
-                                            }
+                                            onChange={handleRainMapScaleChange}
                                             valueLabelDisplay="auto"
                                         />
+                                    </>
+                                )}
+
+                                {rainDisplayMode == "heatmap" && (
+                                    <>
+                                        <h3 className="text-sm font-semibold mt-2">
+                                            Heat Map Mode
+                                        </h3>
+                                        <select
+                                            value={heatmapMode}
+                                            onChange={(e) =>
+                                                setHeatmapMode(
+                                                    e.target.value
+                                                )
+                                            }
+                                            className="p-2 rounded border border-gray-300 bg-white"
+                                        >
+                                            <option value="snapshot">
+                                                Snapshot
+                                            </option>
+                                            <option value="averge">
+                                                Average
+                                            </option>
+                                        </select>
                                     </>
                                 )}
                             </div>
