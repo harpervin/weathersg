@@ -32,6 +32,7 @@ export default function Page() {
     const [rainDisplayMode, setRainDisplayMode] = useState<string>("rectangle");
     const [rainMapScale, setRainMapScale] = useState<number>(1);
     const [heatmapMode, setHeatmapMode] = useState<string>("snapshot");
+    const [mapType, setMapType] = useState<string>("default");
 
     const handleWindParticleSizeChange = (
         event: Event,
@@ -138,6 +139,7 @@ export default function Page() {
                                 windParticleColor={windParticleColor}
                                 rainDisplayMode={rainDisplayMode}
                                 rainMapScale={rainMapScale}
+                                mapType={mapType}
                             />
                         </>
                     )}
@@ -223,6 +225,20 @@ export default function Page() {
                         <h1 className="text-lg font-semibold mb-2">
                             Weather Filters
                         </h1>
+
+                        <hr className="my-2" />
+                        <h2 className="text-md font-semibold mb-2">Map Type</h2>
+                        <select
+                            value={mapType}
+                            onChange={(e) =>
+                                setMapType(e.target.value)
+                            }
+                            className="p-2 rounded border border-gray-300 bg-white"
+                        >
+                            <option value="default">Default</option>
+                            <option value="greyscale">Greyscale</option>
+                        </select>
+
                         <hr className="my-2" />
                         <h2 className="text-md font-semibold mb-2">Wind</h2>
                         <CheckboxGroup
@@ -357,9 +373,7 @@ export default function Page() {
                                         <select
                                             value={heatmapMode}
                                             onChange={(e) =>
-                                                setHeatmapMode(
-                                                    e.target.value
-                                                )
+                                                setHeatmapMode(e.target.value)
                                             }
                                             className="p-2 rounded border border-gray-300 bg-white"
                                         >

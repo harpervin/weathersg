@@ -38,6 +38,7 @@ type MapWithWeatherProps = {
     windParticleColor: string;
     rainDisplayMode: string;
     rainMapScale: number;
+    mapType: string;
 };
 
 const CenterButton: React.FC = () => {
@@ -77,6 +78,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     windParticleColor,
     rainDisplayMode,
     rainMapScale,
+    mapType,
 }) => {
     const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
     const [humidityData, setHumidityData] = useState<HistoricalWeatherData[][]>(
@@ -339,10 +341,20 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                 scrollWheelZoom={true}
                 style={{ height: "100%", width: "100%" }}
             >
-                <TileLayer
-                    attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
-                    url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
-                />
+                {mapType === "greyscale" && (
+                    <TileLayer
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a>'
+                        className="grayscale"
+                    />
+                )}
+
+                {mapType === "default" && (
+                    <TileLayer
+                        attribution='&copy; <a href="https://www.openstreetmap.org/copyright">OpenStreetMap</a> contributors'
+                        url="https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png"
+                    />
+                )}
 
                 {selectedLayers.includes("Windstream") &&
                     windData.length > 0 && (
