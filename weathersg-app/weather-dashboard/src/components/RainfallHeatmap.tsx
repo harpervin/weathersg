@@ -1,7 +1,8 @@
-import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3" 
+import { HeatmapLayer } from "react-leaflet-heatmap-layer-v3";
 import { useMap } from "react-leaflet";
 import { LatLngTuple } from "leaflet";
 import { HistoricalWeatherData } from "@/utils/historicalWeatherData";
+import { useEffect } from "react";
 
 type RainfallHeatmapProps = {
     stationsData: HistoricalWeatherData[][];
@@ -16,8 +17,6 @@ const RainfallHeatmap: React.FC<RainfallHeatmapProps> = ({
     maxIntensity = 50,
     radius = 40,
 }) => {
-    const map = useMap();
-
     const stations = stationsData[currentFrame] || [];
 
     // Convert data to Heatmap format
@@ -26,6 +25,10 @@ const RainfallHeatmap: React.FC<RainfallHeatmapProps> = ({
         station.longitude,
         Math.min(station.value / maxIntensity, 1),
     ]);
+
+    useEffect(() => {
+        console.log(stationsData);
+    }, [stationsData]);
 
     return (
         <HeatmapLayer

@@ -90,20 +90,34 @@ export default function Page() {
     };
 
     const handleHistoricalCheckboxChange = (checkedValues: string[]) => {
-        if (checkedValues.includes("Rainfall") && checkedValues.length === 1) {
-            // If "Rainfall" is the only selected option, keep it
-            setSelectedLayers(["Rainfall"]);
-        } else {
-            // If any other checkbox is selected, remove "Rainfall" and keep only the selected ones
+        // If any other checkbox is selected, remove "Rainfall" and keep only the selected ones
+        if (heatmapMode === "snapshot") {
             setSelectedLayers(
                 checkedValues.filter((layer) => layer !== "Rainfall")
+            );
+        } else if (heatmapMode === "average") {
+            setSelectedLayers(
+                checkedValues.filter((layer) => layer !== "Rainfall Average")
             );
         }
     };
 
     // Helper function to handle Rainfall selection
     const handleHistoricalRainfallSelection = () => {
-        setSelectedLayers(["Rainfall"]);
+        if (heatmapMode === "snapshot") {
+            setSelectedLayers(["Rainfall"]);
+        } else if (heatmapMode === "average") {
+            setSelectedLayers(["Rainfall Average"]);
+        }
+    };
+
+    const handleAverageRainfallSelection = (heatmapMode: string) => {
+        setHeatmapMode(heatmapMode);
+        if (heatmapMode === "snapshot") {
+            setSelectedLayers(["Rainfall"]);
+        } else if (heatmapMode === "average") {
+            setSelectedLayers(["Rainfall Average"]);
+        }
     };
 
     useEffect(() => {
@@ -140,6 +154,7 @@ export default function Page() {
                                 rainDisplayMode={rainDisplayMode}
                                 rainMapScale={rainMapScale}
                                 mapType={mapType}
+                                heatmapMode={heatmapMode}
                             />
                         </>
                     )}
@@ -230,9 +245,7 @@ export default function Page() {
                         <h2 className="text-md font-semibold mb-2">Map Type</h2>
                         <select
                             value={mapType}
-                            onChange={(e) =>
-                                setMapType(e.target.value)
-                            }
+                            onChange={(e) => setMapType(e.target.value)}
                             className="p-2 rounded border border-gray-300 bg-white"
                         >
                             <option value="default">Default</option>
@@ -326,11 +339,17 @@ export default function Page() {
                         <div className="flex flex-col space-y-2">
                             <CheckboxGroup
                                 options={[{ label: "Rainfall" }]}
-                                value={selectedLayers}
+                                value={
+                                    selectedLayers.includes("Rainfall") ||
+                                    selectedLayers.includes("Rainfall Average")
+                                        ? ["Rainfall"]
+                                        : []
+                                }
                                 onChange={handleHistoricalRainfallSelection}
                             />
                         </div>
-                        {selectedLayers.includes("Rainfall") && (
+                        {(selectedLayers.includes("Rainfall") ||
+                            selectedLayers.includes("Rainfall Average")) && (
                             <div className="my-2">
                                 <h3 className="text-sm font-semibold">
                                     Rainfall Map Scale
@@ -373,14 +392,16 @@ export default function Page() {
                                         <select
                                             value={heatmapMode}
                                             onChange={(e) =>
-                                                setHeatmapMode(e.target.value)
+                                                handleAverageRainfallSelection(
+                                                    e.target.value
+                                                )
                                             }
                                             className="p-2 rounded border border-gray-300 bg-white"
                                         >
                                             <option value="snapshot">
                                                 Snapshot
                                             </option>
-                                            <option value="averge">
+                                            <option value="average">
                                                 Average
                                             </option>
                                         </select>

@@ -1,13 +1,10 @@
-export const getMinutelyAvgIntervalQuery = (table: string, interval: number) => {
+export const getMinutelyAvgIntervalQuery = (table: string) => {
     return `SELECT 
-        date, 
-        strftime('%Y-%m-%d %H:%M:00', timestamp, '-' || (strftime('%M', timestamp) % ${interval}) || ' minutes') AS interval_start, 
-        station_id, 
-        AVG(value) AS avg_value
+        *
     FROM ${table}
     WHERE timestamp BETWEEN ? AND ?
-    GROUP BY interval_start, station_id
-    ORDER BY interval_start, station_id;
+    GROUP BY timestamp, stationId
+    ORDER BY timestamp, stationId;
     `;
 };
 
@@ -55,25 +52,18 @@ export const getMonthlyAvgIntervalQuery = (tableName: string) => {
 export const getMultiDbMinutelyAvgQuery = (
     years: number[],
     table: string,
-    interval: number
 ) => {
     const queries = years.flatMap(
         (year) =>
-            `SELECT 
-            '${year}' AS db_year, 
-            '${table}' AS table_name,
-            date, 
-            strftime('%Y-%m-%d %H:%M:00', timestamp, '-' || (strftime('%M', timestamp) % ${interval}) || ' minutes') AS interval_start, 
-            station_id, 
-            AVG(value) AS avg_value
+            `SELECT *
         FROM weather_${year}.${table}
         WHERE timestamp BETWEEN ? AND ?
-        GROUP BY interval_start, station_id
+        GROUP BY timestamp, stationId
     `
     );
 
     return (
-        queries.join("\nUNION ALL\n") + "\nORDER BY interval_start, station_id;"
+        queries.join("\nUNION ALL\n") + "\nORDER BY timestamp, stationId;"
     );
 };
 

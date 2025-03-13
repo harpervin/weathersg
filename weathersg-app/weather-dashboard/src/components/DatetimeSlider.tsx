@@ -28,11 +28,13 @@ const DatetimeSlider: React.FC<{
         temperatureData: HistoricalWeatherData[];
         humidityData: HistoricalWeatherData[];
         rainfallData: HistoricalWeatherData[];
+
     }) => void;
     currentFrame: number;
     currentTimestamp: string;
     totalFrames: number;
     setCurrentFrame: React.Dispatch<React.SetStateAction<number>>;
+    heatmapMode: string;
 }> = ({
     selectedLayers,
     onDataUpdate,
@@ -40,6 +42,7 @@ const DatetimeSlider: React.FC<{
     currentTimestamp,
     totalFrames,
     setCurrentFrame,
+    heatmapMode,
 }) => {
     // Sync slider with the map's animation frame
     useEffect(() => {
@@ -59,7 +62,7 @@ const DatetimeSlider: React.FC<{
     // Start & end times in ISO format
     const [startTime, setStartTime] = useState<string>("");
     const [endTime, setEndTime] = useState<string>("");
-    const [selectedInterval, setSelectedInterval] = useState<String>("");
+    const [selectedInterval, setSelectedInterval] = useState<string>("");
 
     // Maximum time range in minutes
     const [maxInterval, setMaxInterval] = useState<number>(24 * 60); // Default to 24 hours in minutes
@@ -95,25 +98,38 @@ const DatetimeSlider: React.FC<{
         "Air Temperature": "air_temperature",
         Humidity: "relative_humidity",
         Rainfall: "rainfall",
+        "Rainfall Average": "rainfall_avg_",
     };
 
     useEffect(() => {
+        console.log(selectedLayers);
         const windOptions = ["Windstream", "Wind Direction", "Wind Speed"];
-        const mappedTables = [
-            ...new Set(selectedLayers.map((prop) => tableMap[prop])),
-        ];
+
+        const mappedTables = selectedLayers.map((prop) => {
+            if (prop === "Rainfall Average" && selectedInterval) {
+                return `rainfall_avg_${selectedInterval}`;
+            }
+            return tableMap[prop] || prop;
+        });
+
+        // Ensure unique values
+        const uniqueTables = [...new Set(mappedTables)];
 
         // Check if any wind option is selected
         const hasWindSelected = selectedLayers.some((layer) =>
             windOptions.includes(layer)
         );
 
-        if (hasWindSelected && !mappedTables.includes("rainfall")) {
-            mappedTables.push("rainfall"); // Ensure "rainfall" is included
+        if (hasWindSelected && !uniqueTables.includes("rainfall")) {
+            uniqueTables.push("rainfall"); // Ensure "rainfall" is included for wind calculations
         }
 
-        setTablesToQuery(mappedTables);
-    }, [selectedLayers]);
+        setTablesToQuery(uniqueTables);
+    }, [selectedLayers, selectedInterval]);
+
+    useEffect(() => {
+        console.log("tablesToQuery: ", tablesToQuery);
+    }, [tablesToQuery]);
 
     useEffect(() => {
         const today = dayjs();
@@ -201,6 +217,7 @@ const DatetimeSlider: React.FC<{
                         endDate: endTime,
                         interval: String(selectedInterval),
                         param: table,
+                        heatmapMode: heatmapMode,
                     });
 
                     const response = await fetch(`
@@ -216,16 +233,15 @@ const DatetimeSlider: React.FC<{
             // Organize data by table
             const weatherData = {
                 windData:
-                    responses.find((res) => res.table === "wind_combined")
-                        ?.data || [],
+                    responses.find((res) => res.table === "wind_combined")?.data || [],
                 temperatureData:
-                    responses.find((res) => res.table === "air_temperature")
-                        ?.data || [],
+                    responses.find((res) => res.table === "air_temperature")?.data || [],
                 humidityData:
-                    responses.find((res) => res.table === "relative_humidity")
-                        ?.data || [],
+                    responses.find((res) => res.table === "relative_humidity")?.data || [],
                 rainfallData:
                     responses.find((res) => res.table === "rainfall")?.data ||
+                    responses.find((res) => res.table === "rainfall_avg_5min")?.data ||
+                    responses.find((res) => res.table === "rainfall_avg_15min")?.data ||
                     [],
             };
 

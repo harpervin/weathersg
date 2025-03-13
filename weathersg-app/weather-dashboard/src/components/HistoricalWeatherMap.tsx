@@ -39,6 +39,7 @@ type MapWithWeatherProps = {
     rainDisplayMode: string;
     rainMapScale: number;
     mapType: string;
+    heatmapMode: string;
 };
 
 const CenterButton: React.FC = () => {
@@ -79,6 +80,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
     rainDisplayMode,
     rainMapScale,
     mapType,
+    heatmapMode,
 }) => {
     const [windData, setWindData] = useState<HistoricalWindData[][]>([]);
     const [humidityData, setHumidityData] = useState<HistoricalWeatherData[][]>(
@@ -249,7 +251,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             sortedRainfallTimestamps.map(
                 (timestamp) => groupedRainfallData[timestamp]
             );
-
+        console.log(formattedRainfallData);
         setWindData(formattedWindData);
         setHumidityData(formattedHumidityData);
         setTemperatureData(formattedTemperatureData);
@@ -263,7 +265,6 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             return;
         }
         // Ensure the timestamp updates immediately when data is available
-
         let newTimestamp = "";
         if (windData[currentFrame]?.[0]?.timestamp) {
             newTimestamp = windData[currentFrame][0].timestamp;
@@ -332,6 +333,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                 currentTimestamp={currentTimestamp}
                 totalFrames={maxFrames} // Ensure total frames match available data
                 setCurrentFrame={setCurrentFrame} // Allow slider to update the frame
+                heatmapMode={heatmapMode}
             />
 
             <MapContainer
@@ -412,7 +414,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                         />
                     )}
 
-                {selectedLayers.includes("Rainfall") &&
+                {(selectedLayers.includes("Rainfall") || selectedLayers.includes("Rainfall Average"))&&
                     rainDisplayMode === "heatmap" &&
                     rainfallData.length > 0 && (
                         <RainfallHeatmap

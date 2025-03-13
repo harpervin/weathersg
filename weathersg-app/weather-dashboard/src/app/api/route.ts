@@ -2,14 +2,13 @@ import { NextRequest, NextResponse } from "next/server";
 import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import path from "path";
-// import {
-//     getMultiDbMinutelyAvgQuery,
-//     getMultiDbHourlyAvgQuery,
-//     getMultiDbDailyAvgQuery,
-//     getMultiDbMonthlyAvgQuery,
-//     getMinutelyAvgIntervalQuery,
-//     getHourlyAvgIntervalQuery
-// } from "@/utils/average_data_queries"; // Import optimized queries
+import {
+    getMinutelyAvgIntervalQuery,
+    getMultiDbMinutelyAvgQuery    // getMultiDbDailyAvgQuery,
+    // getMultiDbMonthlyAvgQuery,
+    // getMinutelyAvgIntervalQuery,
+    // getHourlyAvgIntervalQuery
+} from "@/utils/average_data_queries"; // Import optimized queries
 
 import {
     getMultiDbMinutelyIntervalQuery,
@@ -58,14 +57,13 @@ async function attachDatabases(db: Database, years: number[]) {
     }
 }
 
-
-
 // Optimized Function to Query Weather Data
 async function getWeatherData(
     startDate: string,
     endDate: string,
     interval: string,
-    params: string[]
+    params: string[],
+    heatmapMode: string
 ) {
     const startYear = parseInt(startDate.substring(0, 4));
     const endYear = parseInt(endDate.substring(0, 4));
@@ -103,19 +101,33 @@ async function getWeatherData(
         switch (interval) {
             case "1min":
             case "5min":
-            case "15min":
-                return years.length > 1
-                    ? getMultiDbMinutelyIntervalQuery(
-                          years,
-                          param,
-                          parseInt(interval),
-                          minute
-                      )
-                    : getMinutelyIntervalQuery(
-                          param,
-                          parseInt(interval),
-                          minute
-                      );
+            case "15min": {
+                if (heatmapMode === "snapshot") {
+                    return years.length > 1
+                        ? getMultiDbMinutelyIntervalQuery(
+                              years,
+                              param,
+                              parseInt(interval),
+                              minute
+                          )
+                        : getMinutelyIntervalQuery(
+                              param,
+                              parseInt(interval),
+                              minute
+                          );
+                }
+                else {
+                    return years.length > 1
+                        ? getMultiDbMinutelyAvgQuery(
+                              years,
+                              param,
+                          )
+                        : getMinutelyAvgIntervalQuery(
+                              param,
+                          );
+                }
+            }
+
             case "1h":
             case "2h":
             case "3h":
@@ -130,7 +142,12 @@ async function getWeatherData(
                           hour,
                           minute
                       )
-                    : getHourlyIntervalQuery(param, parseInt(interval), hour, minute);
+                    : getHourlyIntervalQuery(
+                          param,
+                          parseInt(interval),
+                          hour,
+                          minute
+                      );
 
             case "1day":
             case "7day":
@@ -171,7 +188,6 @@ async function getWeatherData(
                           startDate
                       );
             case "1year":
-
                 return getMultiDbYearlyIntervalQuery(
                     years,
                     param,
@@ -194,7 +210,7 @@ async function getWeatherData(
             // console.log("Executing Query:", q); // Debugging
 
             // Dynamically generate the correct number of parameters
-            console.log(startDate, endDate)
+            console.log(startDate, endDate);
             const queryParams = years.flatMap(() => [startDate, endDate]);
             // console.log("Query Parameters:", queryParams);
 
@@ -217,6 +233,7 @@ export async function GET(req: NextRequest) {
         const interval = url.searchParams.get("interval");
         const paramRaw = url.searchParams.get("param");
         const param: string[] = paramRaw ? paramRaw.split(",") : weatherTables;
+        const heatmapMode = url.searchParams.get("heatmapMode")?? "snapshot";
 
         if (!startDate || !endDate || !interval) {
             return NextResponse.json(
@@ -229,7 +246,13 @@ export async function GET(req: NextRequest) {
             `Fetching data from ${startDate} to ${endDate} with interval ${interval} for ${param}`
         );
 
-        const data = await getWeatherData(startDate, endDate, interval, param);
+        const data = await getWeatherData(
+            startDate,
+            endDate,
+            interval,
+            param,
+            heatmapMode
+        );
 
         return NextResponse.json(data, { status: 200 });
     } catch (error) {

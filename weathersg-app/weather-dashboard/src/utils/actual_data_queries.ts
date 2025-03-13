@@ -1,4 +1,5 @@
 export const getMinutelyIntervalQuery = (table: string, interval: number, minute: string ) => {
+    console.log("running snapshot minute")
     return `SELECT 
         strftime('%Y-%m-%d %H:%M:00', timestamp) AS interval_start, 
         *
