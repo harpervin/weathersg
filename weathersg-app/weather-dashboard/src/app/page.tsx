@@ -90,39 +90,21 @@ export default function Page() {
     };
 
     const handleHistoricalCheckboxChange = (checkedValues: string[]) => {
-        // If any other checkbox is selected, remove "Rainfall" and keep only the selected ones
-        if (heatmapMode === "snapshot") {
-            setSelectedLayers(
-                checkedValues.filter((layer) => layer !== "Rainfall")
-            );
-        } else if (heatmapMode === "average") {
-            setSelectedLayers(
-                checkedValues.filter((layer) => layer !== "Rainfall Average")
-            );
-        }
+        setSelectedLayers(
+            checkedValues.filter((layer) => layer !== "Rainfall")
+        );
     };
 
     // Helper function to handle Rainfall selection
     const handleHistoricalRainfallSelection = () => {
-        if (heatmapMode === "snapshot") {
-            setSelectedLayers(["Rainfall"]);
-        } else if (heatmapMode === "average") {
-            setSelectedLayers(["Rainfall Average"]);
-        }
+        setSelectedLayers(["Rainfall"]);
     };
 
     const handleAverageRainfallSelection = (heatmapMode: string) => {
         setHeatmapMode(heatmapMode);
-        if (heatmapMode === "snapshot") {
-            setSelectedLayers(["Rainfall"]);
-        } else if (heatmapMode === "average") {
-            setSelectedLayers(["Rainfall Average"]);
-        }
+        setSelectedLayers(["Rainfall"]);
     };
 
-    useEffect(() => {
-        console.log(selectedLayers);
-    }, [selectedLayers]);
 
     const tabs: MapTab[] = ["Realtime Weather Map", "Historical Weather Map"];
 
@@ -339,17 +321,11 @@ export default function Page() {
                         <div className="flex flex-col space-y-2">
                             <CheckboxGroup
                                 options={[{ label: "Rainfall" }]}
-                                value={
-                                    selectedLayers.includes("Rainfall") ||
-                                    selectedLayers.includes("Rainfall Average")
-                                        ? ["Rainfall"]
-                                        : []
-                                }
+                                value={selectedLayers}
                                 onChange={handleHistoricalRainfallSelection}
                             />
                         </div>
-                        {(selectedLayers.includes("Rainfall") ||
-                            selectedLayers.includes("Rainfall Average")) && (
+                        {selectedLayers.includes("Rainfall") && (
                             <div className="my-2">
                                 <h3 className="text-sm font-semibold">
                                     Rainfall Map Scale
@@ -364,7 +340,7 @@ export default function Page() {
                                     <option value="rectangle">
                                         Measurements
                                     </option>
-                                    <option value="rainmap">Rain Map</option>
+                                    <option value="rainmap">Bubble Plot</option>
                                     <option value="heatmap">Heat Map</option>
                                 </select>
 

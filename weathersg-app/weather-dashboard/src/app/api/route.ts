@@ -3,8 +3,8 @@ import sqlite3 from "sqlite3";
 import { open } from "sqlite";
 import path from "path";
 import {
-    getMinutelyAvgIntervalQuery,
-    getMultiDbMinutelyAvgQuery    // getMultiDbDailyAvgQuery,
+    getAvgIntervalQuery,
+    getMultiDbAvgQuery,
     // getMultiDbMonthlyAvgQuery,
     // getMinutelyAvgIntervalQuery,
     // getHourlyAvgIntervalQuery
@@ -115,16 +115,10 @@ async function getWeatherData(
                               parseInt(interval),
                               minute
                           );
-                }
-                else {
+                } else {
                     return years.length > 1
-                        ? getMultiDbMinutelyAvgQuery(
-                              years,
-                              param,
-                          )
-                        : getMinutelyAvgIntervalQuery(
-                              param,
-                          );
+                        ? getMultiDbAvgQuery(years)
+                        : getAvgIntervalQuery();
                 }
             }
 
@@ -134,69 +128,91 @@ async function getWeatherData(
             case "4h":
             case "6h":
             case "12h":
-                return years.length > 1
-                    ? getMultiDbHourlyIntervalQuery(
-                          years,
-                          param,
-                          parseInt(interval),
-                          hour,
-                          minute
-                      )
-                    : getHourlyIntervalQuery(
-                          param,
-                          parseInt(interval),
-                          hour,
-                          minute
-                      );
+                if (heatmapMode === "snapshot") {
+                    return years.length > 1
+                        ? getMultiDbHourlyIntervalQuery(
+                              years,
+                              param,
+                              parseInt(interval),
+                              hour,
+                              minute
+                          )
+                        : getHourlyIntervalQuery(
+                              param,
+                              parseInt(interval),
+                              hour,
+                              minute
+                          );
+                } else {
+                    return years.length > 1
+                        ? getMultiDbAvgQuery(years)
+                        : getAvgIntervalQuery();
+                }
 
             case "1day":
             case "7day":
-                return years.length > 1
-                    ? getMultiDbDailyIntervalQuery(
-                          years,
-                          param,
-                          parseInt(interval),
-                          startDate,
-                          hour,
-                          minute
-                      )
-                    : getDailyIntervalQuery(
-                          param,
-                          parseInt(interval),
-                          startDate,
-                          hour,
-                          minute
-                      );
+                if (heatmapMode === "snapshot") {
+                    return years.length > 1
+                        ? getMultiDbDailyIntervalQuery(
+                              years,
+                              param,
+                              parseInt(interval),
+                              startDate,
+                              hour,
+                              minute
+                          )
+                        : getDailyIntervalQuery(
+                              param,
+                              parseInt(interval),
+                              startDate,
+                              hour,
+                              minute
+                          );
+                } else {
+                    return years.length > 1
+                        ? getMultiDbAvgQuery(years)
+                        : getAvgIntervalQuery();
+                }
             case "1month":
             case "6month":
-                return years.length > 1
-                    ? getMultiDbMonthlyIntervalQuery(
-                          years,
-                          param,
-                          parseInt(interval),
-                          day,
-                          hour,
-                          minute,
-                          startDate
-                      )
-                    : getMonthlyIntervalQuery(
-                          param,
-                          parseInt(interval),
-                          day,
-                          hour,
-                          minute,
-                          startDate
-                      );
+                if (heatmapMode === "snapshot") {
+                    return years.length > 1
+                        ? getMultiDbMonthlyIntervalQuery(
+                              years,
+                              param,
+                              parseInt(interval),
+                              day,
+                              hour,
+                              minute,
+                              startDate
+                          )
+                        : getMonthlyIntervalQuery(
+                              param,
+                              parseInt(interval),
+                              day,
+                              hour,
+                              minute,
+                              startDate
+                          );
+                } else {
+                    return years.length > 1
+                        ? getMultiDbAvgQuery(years)
+                        : getAvgIntervalQuery();
+                }
             case "1year":
-                return getMultiDbYearlyIntervalQuery(
-                    years,
-                    param,
-                    parseInt(interval),
-                    month,
-                    day,
-                    hour,
-                    minute
-                );
+                if (heatmapMode === "snapshot") {
+                    return getMultiDbYearlyIntervalQuery(
+                        years,
+                        param,
+                        parseInt(interval),
+                        month,
+                        day,
+                        hour,
+                        minute
+                    );
+                } else {
+                    return getMultiDbAvgQuery(years);
+                }
 
             default:
                 throw new Error("Invalid interval");
@@ -204,18 +220,13 @@ async function getWeatherData(
     });
 
     // Run queries in parallel
-    // Run queries in parallel
+
     const queryResults = await Promise.all(
         queryPromises.map(async (q) => {
-            // console.log("Executing Query:", q); // Debugging
-
             // Dynamically generate the correct number of parameters
-            console.log(startDate, endDate);
             const queryParams = years.flatMap(() => [startDate, endDate]);
-            // console.log("Query Parameters:", queryParams);
 
             const result = await db.all(q, queryParams);
-            // console.log("Query Result:", result);
             return result;
         })
     );
@@ -233,7 +244,7 @@ export async function GET(req: NextRequest) {
         const interval = url.searchParams.get("interval");
         const paramRaw = url.searchParams.get("param");
         const param: string[] = paramRaw ? paramRaw.split(",") : weatherTables;
-        const heatmapMode = url.searchParams.get("heatmapMode")?? "snapshot";
+        const heatmapMode = url.searchParams.get("heatmapMode") ?? "snapshot";
 
         if (!startDate || !endDate || !interval) {
             return NextResponse.json(

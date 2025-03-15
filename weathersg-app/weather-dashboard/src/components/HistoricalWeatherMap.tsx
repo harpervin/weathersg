@@ -251,7 +251,6 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
             sortedRainfallTimestamps.map(
                 (timestamp) => groupedRainfallData[timestamp]
             );
-        console.log(formattedRainfallData);
         setWindData(formattedWindData);
         setHumidityData(formattedHumidityData);
         setTemperatureData(formattedTemperatureData);
@@ -422,6 +421,7 @@ const HistoricalWeatherMap: React.FC<MapWithWeatherProps> = ({
                             currentFrame={currentFrame}
                             maxIntensity={50}
                             radius={30}
+                            heatmapMode={heatmapMode}
                         />
                     )}
 

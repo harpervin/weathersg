@@ -28,7 +28,6 @@ const DatetimeSlider: React.FC<{
         temperatureData: HistoricalWeatherData[];
         humidityData: HistoricalWeatherData[];
         rainfallData: HistoricalWeatherData[];
-
     }) => void;
     currentFrame: number;
     currentTimestamp: string;
@@ -92,23 +91,18 @@ const DatetimeSlider: React.FC<{
     const [isPlaying, setIsPlaying] = useState<boolean>(false);
 
     const tableMap: Record<string, string> = {
-        Windstream: "wind_combined",
+        "Windstream": "wind_combined",
         "Wind Direction": "wind_combined",
         "Wind Speed": "wind_combined",
         "Air Temperature": "air_temperature",
-        Humidity: "relative_humidity",
-        Rainfall: "rainfall",
-        "Rainfall Average": "rainfall_avg_",
+        "Humidity": "relative_humidity",
+        "Rainfall": "rainfall",
     };
 
     useEffect(() => {
-        console.log(selectedLayers);
         const windOptions = ["Windstream", "Wind Direction", "Wind Speed"];
 
         const mappedTables = selectedLayers.map((prop) => {
-            if (prop === "Rainfall Average" && selectedInterval) {
-                return `rainfall_avg_${selectedInterval}`;
-            }
             return tableMap[prop] || prop;
         });
 
@@ -126,10 +120,6 @@ const DatetimeSlider: React.FC<{
 
         setTablesToQuery(uniqueTables);
     }, [selectedLayers, selectedInterval]);
-
-    useEffect(() => {
-        console.log("tablesToQuery: ", tablesToQuery);
-    }, [tablesToQuery]);
 
     useEffect(() => {
         const today = dayjs();
@@ -190,13 +180,11 @@ const DatetimeSlider: React.FC<{
     };
 
     const handleFetchData = async () => {
-        console.log("Tables to Query:", tablesToQuery);
         if (tablesToQuery.length === 0) {
             setMissingParams("Weather Filter");
             return;
         }
 
-        console.log("Selected Interval:", selectedInterval);
         if (!selectedInterval || String(selectedInterval).startsWith("0")) {
             setMissingParams("Time Interval");
             return;
@@ -207,7 +195,6 @@ const DatetimeSlider: React.FC<{
         setIsPlaying(false); // Prevent slider from showing until data is fetched
 
         try {
-            console.log("Fetching data for tables:", tablesToQuery);
 
             // Send multiple API requests in parallel
             const responses = await Promise.all(
@@ -233,15 +220,16 @@ const DatetimeSlider: React.FC<{
             // Organize data by table
             const weatherData = {
                 windData:
-                    responses.find((res) => res.table === "wind_combined")?.data || [],
+                    responses.find((res) => res.table === "wind_combined")
+                        ?.data || [],
                 temperatureData:
-                    responses.find((res) => res.table === "air_temperature")?.data || [],
+                    responses.find((res) => res.table === "air_temperature")
+                        ?.data || [],
                 humidityData:
-                    responses.find((res) => res.table === "relative_humidity")?.data || [],
+                    responses.find((res) => res.table === "relative_humidity")
+                        ?.data || [],
                 rainfallData:
                     responses.find((res) => res.table === "rainfall")?.data ||
-                    responses.find((res) => res.table === "rainfall_avg_5min")?.data ||
-                    responses.find((res) => res.table === "rainfall_avg_15min")?.data ||
                     [],
             };
 
